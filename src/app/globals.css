@@ -1,0 +1,39 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+:root {
+  --bg: #F5F8FC;
+  --surface: #FFFFFF;
+  --navy: #0C2340;
+  --ink: #16273D;
+  --ink-soft: #3A4D66;
+  --muted: #5B6E88;
+  --muted-2: #8499B3;
+  --line: #E6ECF4;
+  --line-soft: #F0F3F8;
+  --primary: #1C5DDA;
+  --primary-dark: #0A357F;
+  --primary-soft: #EAF1FC;
+  --up: #0E9F6E;
+  --down: #E5484D;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--primary); color: #fff; }
+a { color: inherit; text-decoration: none; }
+
+@keyframes bdsFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bdsFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bdsShimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+
+.bds-fade { animation: bdsFade .4s ease; }
+
+/* 카드 hover */
+.bds-card { transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
+.bds-card:hover { border-color: var(--primary) !important; transform: translateY(-3px); box-shadow: 0 16px 36px rgba(12,35,64,0.1); }

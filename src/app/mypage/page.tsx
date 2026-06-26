@@ -1,0 +1,56 @@
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import { getSaved } from '@/lib/queries/savedRead';
+import { getListingsByIds, countListings } from '@/lib/queries/listings';
+import { ListingCard } from '@/components/ListingCard';
+import { EmptyState } from '@/components/EmptyState';
+
+export const dynamic = 'force-dynamic';
+
+export default async function MyPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login?returnTo=%2Fmypage'); // 미들웨어 가드 + 이중 방어
+
+  const savedIds = await getSaved();
+  const [savedListings, total] = await Promise.all([getListingsByIds(savedIds), countListings()]);
+  const savedSet = new Set(savedIds);
+
+  const stats = [
+    { label: '관심 매물', value: `${savedIds.length}개` },
+    { label: '최근 본 지역', value: '—' }, // AD8: 별도 조회기록 추적 없음(프록시 미구현)
+    { label: '추천 매물', value: `${total}개` },
+  ];
+
+  return (
+    <div className="bds-fade" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 64px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
+        <span style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg,#1C5DDA,#0A357F)', color: '#fff', fontSize: 24, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>투</span>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--navy)', margin: 0, letterSpacing: '-0.02em' }}>투자자님, 안녕하세요</h1>
+          <p style={{ fontSize: 14, color: '#7286A0', margin: '4px 0 0' }}>관심 매물과 투자 활동을 한곳에서 관리하세요.</p>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 16, margin: '24px 0 32px' }}>
+        {stats.map((m) => (
+          <div key={m.label} style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 20 }}>
+            <div style={{ fontSize: 13, color: '#8499B3', fontWeight: 600, marginBottom: 8 }}>{m.label}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--navy)', letterSpacing: '-0.02em' }}>{m.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)', margin: '0 0 18px', letterSpacing: '-0.02em' }}>관심 매물 <span style={{ color: 'var(--primary)' }}>{savedIds.length}</span></h2>
+      {savedListings.length > 0 ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(270px,1fr))', gap: 22 }}>
+          {savedListings.map((l) => (
+            <ListingCard key={l.id} listing={l} isSaved={savedSet.has(l.id)} returnTo="/mypage" />
+          ))}
+        </div>
+      ) : (
+        <EmptyState icon="♡" title="아직 저장한 매물이 없어요" desc="마음에 드는 매물의 하트를 눌러 저장해 보세요." cta={{ label: '매물 둘러보기', href: '/listings' }} />
+      )}
+    </div>
+  );
+}

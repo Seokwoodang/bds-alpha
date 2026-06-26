@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+.env.local
+.env*.local
+*.log
+.DS_Store
+/playwright-report/
+/test-results/
+/coverage/
+next-env.d.ts
+
+# build/tooling artifacts
+*.tsbuildinfo
+.spec-to-code-state.json
