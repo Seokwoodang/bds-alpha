@@ -3,7 +3,7 @@
 slug: bds-alpha
 source: /Users/luke/Downloads/design_handoff_bds_alpha/ (README.md · 부동산알파.dc.html · ListingCard.dc.html)
 scope: **docs** (Phase 1–6, 구현 없음 — RED 테스트까지). Phase 3에서 데이터 백엔드 = **Supabase**(Auth+DB)로 확정 → 사실상 풀스택 계약
-status: **🚪 Gate 2 대기** — 전 단계 완료. vitest 47/47 · e2e 30 pass(라이브 Supabase) · 리뷰 통과 · 종합검증 통과
+status: **✅ complete (Gate 2 승인)** — vitest 47/47 · e2e 30 pass(라이브 Supabase) · 리뷰·종합검증 통과 · GitHub 푸시(Seokwoodang/bds-alpha)
 
 ## 핸드오프 (다음 개발자)
 - 본 run은 **문서 + RED 테스트**까지. 구현(GREEN)·Supabase 적용은 안 함.
