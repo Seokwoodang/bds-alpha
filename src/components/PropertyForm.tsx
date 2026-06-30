@@ -11,10 +11,15 @@ const label: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(
 const errStyle: React.CSSProperties = { fontSize: 12, color: 'var(--down)', marginTop: 3 };
 
 function blank(): PropertyInput {
-  return { name: '', region: '', dong: '', type: '', area: '', purchase_price: '', purchase_date: '', memo: '' };
+  return { name: '', region: '', dong: '', type: '', area: '', purchase_price: '', purchase_date: '', memo: '', is_rental: false, deposit: '', monthly_rent: '', rent_day: '', lease_start: '', lease_end: '' };
 }
 function fromProperty(p: Property): PropertyInput {
-  return { name: p.name, region: p.region, dong: p.dong ?? '', type: p.type, area: p.area, purchase_price: p.purchase_price, purchase_date: p.purchase_date, memo: p.memo ?? '' };
+  return {
+    name: p.name, region: p.region, dong: p.dong ?? '', type: p.type, area: p.area,
+    purchase_price: p.purchase_price, purchase_date: p.purchase_date, memo: p.memo ?? '',
+    is_rental: p.is_rental, deposit: p.deposit || '', monthly_rent: p.monthly_rent || '',
+    rent_day: p.rent_day ?? '', lease_start: p.lease_start ?? '', lease_end: p.lease_end ?? '',
+  };
 }
 
 export function PropertyForm({ editing, onDone }: { editing: Property | null; onDone: () => void }) {
@@ -91,6 +96,39 @@ export function PropertyForm({ editing, onDone }: { editing: Property | null; on
         <label style={label} htmlFor="p-memo">메모 (선택)</label>
         <input id="p-memo" style={field} value={form.memo ?? ''} onChange={(e) => set('memo', e.target.value)} placeholder="투자 메모" />
       </div>
+
+      <label style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>
+        <input type="checkbox" checked={!!form.is_rental} onChange={(e) => set('is_rental', e.target.checked)} />
+        임대(월세) 주는 물건 — 지식산업센터·상가·오피스텔 등
+      </label>
+
+      {form.is_rental && (
+        <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 14, background: 'var(--bg-2,#F7F9FC)', border: '1px solid var(--line)', borderRadius: 12, padding: 16 }}>
+          <div>
+            <label style={label} htmlFor="p-deposit">보증금 (만원)</label>
+            <input id="p-deposit" type="number" style={field} value={form.deposit ?? ''} onChange={(e) => set('deposit', e.target.value === '' ? '' : Number(e.target.value))} placeholder="예: 10000" />
+          </div>
+          <div>
+            <label style={label} htmlFor="p-rent">월세 (만원)</label>
+            <input id="p-rent" type="number" style={field} value={form.monthly_rent ?? ''} onChange={(e) => set('monthly_rent', e.target.value === '' ? '' : Number(e.target.value))} placeholder="예: 300" />
+            {errors.monthly_rent && <div style={errStyle}>{errors.monthly_rent}</div>}
+          </div>
+          <div>
+            <label style={label} htmlFor="p-rentday">월세 수령일 (1~31)</label>
+            <input id="p-rentday" type="number" min={1} max={31} style={field} value={form.rent_day ?? ''} onChange={(e) => set('rent_day', e.target.value === '' ? '' : Number(e.target.value))} placeholder="예: 25" />
+            {errors.rent_day && <div style={errStyle}>{errors.rent_day}</div>}
+          </div>
+          <div>
+            <label style={label} htmlFor="p-lstart">계약 시작일</label>
+            <input id="p-lstart" type="date" style={field} value={form.lease_start ?? ''} onChange={(e) => set('lease_start', e.target.value)} />
+          </div>
+          <div>
+            <label style={label} htmlFor="p-lend">계약 만기일</label>
+            <input id="p-lend" type="date" style={field} value={form.lease_end ?? ''} onChange={(e) => set('lease_end', e.target.value)} />
+            {errors.lease_end && <div style={errStyle}>{errors.lease_end}</div>}
+          </div>
+        </div>
+      )}
 
       <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
         <button type="button" onClick={onDone} style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700, color: 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit' }}>취소</button>

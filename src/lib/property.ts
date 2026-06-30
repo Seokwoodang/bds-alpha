@@ -1,7 +1,7 @@
 import type { PropertyInput } from '@/lib/types';
 
 export const PROPERTY_REGIONS = ['강남구', '서초구', '송파구', '용산구', '성동구', '마포구', '광진구', '영등포구'] as const;
-export const PROPERTY_TYPES = ['아파트', '오피스텔', '주택', '오피스'] as const;
+export const PROPERTY_TYPES = ['아파트', '오피스텔', '주택', '오피스', '지식산업센터', '상가'] as const;
 
 /** 매입가(만원) → "24억 5,000" / "32억" / "9,000만" 형식. */
 export function formatPriceManwon(manwon: number): string {
@@ -46,6 +46,19 @@ export function validateProperty(input: PropertyInput, now: Date): PropertyError
     const d = new Date(input.purchase_date + 'T00:00:00');
     if (Number.isNaN(d.getTime())) e.purchase_date = '올바른 날짜가 아닙니다.';
     else if (d.getTime() > now.getTime()) e.purchase_date = '매입일은 미래일 수 없습니다.';
+  }
+  if (input.is_rental) {
+    if (input.monthly_rent === '' || !(Number(input.monthly_rent) > 0)) e.monthly_rent = '임대 물건은 월세를 입력하세요.';
+    if (input.rent_day !== '' && input.rent_day != null) {
+      const day = Number(input.rent_day);
+      if (!(day >= 1 && day <= 31)) e.rent_day = '월세 수령일은 1~31 사이여야 합니다.';
+    }
+    if (input.lease_start && input.lease_end) {
+      const s = new Date(input.lease_start + 'T00:00:00');
+      const en = new Date(input.lease_end + 'T00:00:00');
+      if (!Number.isNaN(s.getTime()) && !Number.isNaN(en.getTime()) && en.getTime() < s.getTime())
+        e.lease_end = '계약 만기일이 시작일보다 빠를 수 없습니다.';
+    }
   }
   return e;
 }

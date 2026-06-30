@@ -13,7 +13,12 @@ async function requireUser() {
   return { supabase, user };
 }
 
+function numOr(v: number | '' | undefined, fallback: number): number {
+  return v === '' || v == null ? fallback : Number(v);
+}
+
 function toRow(input: PropertyInput) {
+  const isRental = !!input.is_rental;
   return {
     name: input.name.trim(),
     region: input.region,
@@ -23,6 +28,12 @@ function toRow(input: PropertyInput) {
     purchase_price: Number(input.purchase_price),
     purchase_date: input.purchase_date,
     memo: input.memo?.trim() || null,
+    is_rental: isRental,
+    deposit: isRental ? numOr(input.deposit, 0) : 0,
+    monthly_rent: isRental ? numOr(input.monthly_rent, 0) : 0,
+    rent_day: isRental && input.rent_day !== '' && input.rent_day != null ? Number(input.rent_day) : null,
+    lease_start: isRental && input.lease_start ? input.lease_start : null,
+    lease_end: isRental && input.lease_end ? input.lease_end : null,
   };
 }
 

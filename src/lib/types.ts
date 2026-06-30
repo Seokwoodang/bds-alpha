@@ -48,11 +48,18 @@ export interface Property {
   name: string;
   region: string;
   dong: string | null;
-  type: PType;
+  type: string; // 아파트/오피스텔/주택/오피스/지식산업센터/상가 등(보유자산은 자유)
   area: number;
   purchase_price: number; // 만원
   purchase_date: string; // YYYY-MM-DD
   memo: string | null;
+  // 임대 정보(임대 주는 물건)
+  is_rental: boolean;
+  deposit: number;        // 보증금(만원)
+  monthly_rent: number;   // 월세(만원)
+  rent_day: number | null;// 월세 수령일(1~31)
+  lease_start: string | null;
+  lease_end: string | null;
   created_at: string;
 }
 
@@ -66,6 +73,13 @@ export interface PropertyInput {
   purchase_price: number | '';
   purchase_date: string;
   memo?: string;
+  // 임대
+  is_rental?: boolean;
+  deposit?: number | '';
+  monthly_rent?: number | '';
+  rent_day?: number | '';
+  lease_start?: string;
+  lease_end?: string;
 }
 
 export interface QuerySpec {
