@@ -15,6 +15,17 @@ test.describe('매물 상세', () => {
     await expect(page.getByText('투자 포인트')).toBeVisible();
   });
 
+  test('TAX1 · 매물 상세에 취득세 계산 표시 + 보유주택수 변경 시 중과', async ({ page }) => {
+    // 강남구(조정) 매물로 진입
+    await page.goto('/listings?region=강남구');
+    await page.getByRole('article').first().getByRole('link').first().click();
+    await expect(page.getByRole('heading', { name: '취득세 계산' })).toBeVisible();
+    await expect(page.getByText(/총 취득세/)).toBeVisible();
+    // 보유 2 → 조정 3주택 중과(12%) 표기
+    await page.getByLabel('현재 보유 주택 수').fill('2');
+    await expect(page.getByText('중과').first()).toBeVisible();
+  });
+
   test('T66 · 없는 id 딥링크 → not-found 페이지(함수적 404)', async ({ page }) => {
     await page.goto('/listings/9999');
     // notFound()가 트리거되어 전용 not-found 페이지 렌더(정상 상세 아님).

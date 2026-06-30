@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { canAfford, type InvestMode } from '@/lib/invest';
+import { acquisitionTax, isAdjustedRegion } from '@/lib/tax';
 import type { RegionGap } from '@/lib/queries/regions';
 
 interface ListingRow { id: number; title: string; region: string; dong: string | null; price_text: string; price_num: number; area: number }
@@ -17,6 +18,7 @@ export function InvestSimulator() {
   const [loaded, setLoaded] = useState(false);
   const [capital, setCapital] = useState(5);
   const [loan, setLoan] = useState(3);
+  const [owned, setOwned] = useState(0); // 현재 보유 주택 수
   const [mode, setMode] = useState<InvestMode>('gap');
 
   useEffect(() => {
@@ -35,17 +37,17 @@ export function InvestSimulator() {
   const budget = mode === 'gap' ? capital + loan : capital;
 
   const regionRecs = useMemo(() => gaps
-    .map((g) => ({ g, r: canAfford(mode, g.sale_eok, g.jeonse_eok, capital, loan) }))
+    .map((g) => { const tax = acquisitionTax(g.sale_eok, 84, owned + 1, isAdjustedRegion(g.region)); return { g, tax, r: canAfford(mode, g.sale_eok, g.jeonse_eok, capital, loan, tax.total) }; })
     .filter((x) => x.r.afford)
     .sort((a, b) => mode === 'gap' ? b.g.jeonse_ratio - a.g.jeonse_ratio : a.r.need - b.r.need),
-    [gaps, mode, capital, loan]);
+    [gaps, mode, capital, loan, owned]);
 
   const listingRecs = useMemo(() => listings
-    .map((l) => { const sale = l.price_num / 10000; const jeonse = jeonseByRegion[l.region] ?? 0; return { l, sale, r: canAfford(mode, sale, jeonse, capital, loan) }; })
+    .map((l) => { const sale = l.price_num / 10000; const jeonse = jeonseByRegion[l.region] ?? 0; const tax = acquisitionTax(sale, l.area, owned + 1, isAdjustedRegion(l.region)); return { l, sale, tax, r: canAfford(mode, sale, jeonse, capital, loan, tax.total) }; })
     .filter((x) => x.r.afford)
     .sort((a, b) => a.r.need - b.r.need)
     .slice(0, 12),
-    [listings, jeonseByRegion, mode, capital, loan]);
+    [listings, jeonseByRegion, mode, capital, loan, owned]);
 
   return (
     <div>
@@ -64,13 +66,16 @@ export function InvestSimulator() {
           <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}>대출 가능액 (억)
             <input type="number" step="0.5" min="0" value={loan} onChange={(ev) => setLoan(Math.max(0, Number(ev.target.value)))} aria-label="대출 가능액" style={{ ...field, marginTop: 6 }} />
           </label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}>현재 보유 주택 수
+            <input type="number" step="1" min="0" value={owned} onChange={(ev) => setOwned(Math.max(0, Math.floor(Number(ev.target.value))))} aria-label="현재 보유 주택 수" style={{ ...field, marginTop: 6 }} />
+          </label>
           <div style={{ alignSelf: 'end' }}>
             <div style={{ fontSize: 13, color: '#8499B3', fontWeight: 600, marginBottom: 6 }}>{mode === 'gap' ? '가용 예산(자본+대출)' : '자기자본'}</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--primary)' }}>{e(budget)}</div>
           </div>
         </div>
         <div style={{ fontSize: 12, color: 'var(--muted-2)', marginTop: 12 }}>
-          {mode === 'gap' ? '갭투자: 필요자본 = (매매−전세) + 취득세. 전세보증금이 매매대금 레버리지.' : '실거주: 필요자본 = 매매 + 취득세 − 대출.'} 취득세는 간이 추정(전용85·다주택 등 미반영). 실거래 중위가 기준.
+          {mode === 'gap' ? '갭투자: 필요자본 = (매매−전세) + 취득세. 전세보증금이 매매대금 레버리지.' : '실거주: 필요자본 = 매매 + 취득세 − 대출.'} 취득세는 <strong>취득 후 {owned + 1}주택</strong> 기준 + 조정대상지역(강남·서초·송파·용산) 중과 + 85㎡초과 농특세를 반영(간이). 실거래 중위가 기준.
         </div>
       </div>
 
@@ -84,9 +89,9 @@ export function InvestSimulator() {
             <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 30, textAlign: 'center', color: 'var(--muted)' }}>예산으로 진입 가능한 지역이 없어요. 자본·대출을 조정해 보세요.</div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 16, marginBottom: 32 }}>
-              {regionRecs.map(({ g, r }) => (
+              {regionRecs.map(({ g, tax, r }) => (
                 <Link key={g.region} href={`/listings?region=${encodeURIComponent(g.region)}`} className="bds-card" style={{ display: 'block', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 18 }}>
-                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--navy)', marginBottom: 8 }}>{g.region}</div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--navy)', marginBottom: 8 }}>{g.region}{isAdjustedRegion(g.region) && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--down)', background: '#FCE9EA', padding: '1px 6px', borderRadius: 5, marginLeft: 6 }}>조정</span>}</div>
                   <div style={{ fontSize: 13, color: '#7286A0', marginBottom: 2 }}>매매 {e(g.sale_eok)} · 전세 {e(g.jeonse_eok)}</div>
                   {mode === 'gap' && <div style={{ fontSize: 13, color: '#7286A0', marginBottom: 8 }}>갭 {e(g.gap_eok)} · 전세가율 <strong style={{ color: g.jeonse_ratio >= 45 ? 'var(--up)' : 'var(--ink)' }}>{g.jeonse_ratio}%</strong></div>}
                   <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 10, marginTop: 8 }}>
@@ -94,6 +99,7 @@ export function InvestSimulator() {
                     <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--navy)' }}>{e(r.need)}</span>
                     <span style={{ fontSize: 12, color: 'var(--up)', fontWeight: 700, marginLeft: 6 }}>여유 {e(r.margin)}</span>
                   </div>
+                  <div style={{ fontSize: 11, color: 'var(--muted-2)', marginTop: 4 }}>취득세 {e(tax.total)} ({tax.totalRatePct}%{tax.heavy ? ' 중과' : ''})</div>
                 </Link>
               ))}
             </div>
@@ -105,7 +111,7 @@ export function InvestSimulator() {
             <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 30, textAlign: 'center', color: 'var(--muted)' }}>예산 내 매물이 없어요.</div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 16 }}>
-              {listingRecs.map(({ l, r }) => (
+              {listingRecs.map(({ l, tax, r }) => (
                 <Link key={l.id} href={`/listings/${l.id}`} className="bds-card" style={{ display: 'block', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 18 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', background: 'var(--primary-soft)', padding: '2px 8px', borderRadius: 5 }}>{l.region}</span>
@@ -118,6 +124,7 @@ export function InvestSimulator() {
                     <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--primary)' }}>{e(r.need)}</span>
                     <span style={{ fontSize: 12, color: 'var(--up)', fontWeight: 700, marginLeft: 6 }}>여유 {e(r.margin)}</span>
                   </div>
+                  <div style={{ fontSize: 11, color: 'var(--muted-2)', marginTop: 4 }}>취득세 {e(tax.total)} ({tax.totalRatePct}%{tax.heavy ? ' 중과' : ''})</div>
                 </Link>
               ))}
             </div>

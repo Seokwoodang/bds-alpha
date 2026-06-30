@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import { getListingById, getSimilar } from '@/lib/queries/listings';
 import { getSaved } from '@/lib/queries/savedRead';
+import { getProperties } from '@/lib/queries/propertiesRead';
+import { TaxEstimate } from '@/components/TaxEstimate';
 import { detailSpecs, detailPoints, dealBadge } from '@/lib/format';
 import { LISTING_COVER } from '@/lib/cover';
 import { ListingCard } from '@/components/ListingCard';
@@ -21,8 +23,9 @@ export default async function DetailPage({ params }: { params: Promise<{ id: str
   const listing = await getListingById(id);
   if (!listing) notFound();
 
-  const [similar, saved] = await Promise.all([getSimilar(listing.region, listing.id), getSaved()]);
+  const [similar, saved, properties] = await Promise.all([getSimilar(listing.region, listing.id), getSaved(), getProperties()]);
   const savedSet = new Set(saved);
+  const ownedCount = properties.length;
   const specs = detailSpecs(listing);
   const points = detailPoints(listing);
   const badge = dealBadge(listing.deal);
@@ -64,6 +67,8 @@ export default async function DetailPage({ params }: { params: Promise<{ id: str
               </div>
             ))}
           </div>
+
+          <TaxEstimate priceEok={listing.price_num / 10000} area={listing.area} region={listing.region} ownedDefault={ownedCount} />
         </div>
 
         <div style={{ flex: '1 1 320px', minWidth: 280 }}>
