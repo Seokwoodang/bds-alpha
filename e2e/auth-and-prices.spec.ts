@@ -62,10 +62,13 @@ test.describe('인증', () => {
 test.describe('시세 / 지도', () => {
   test('T70 · 칩/막대 클릭 시 지역·차트·URL 동기화', async ({ page }) => {
     await page.goto('/prices');
-    await page.waitForLoadState('networkidle'); // 하이드레이션 대기(무거운 페이지)
     await expect(page.getByText('지역별 시세 비교')).toBeVisible();
-    await page.getByRole('button', { name: '성동구', exact: true }).click();
-    await expect(page).toHaveURL(/region=성동구|region=%/);
+    // 하이드레이션 완료 전 클릭 방지: URL 바뀔 때까지 재시도
+    const chip = page.getByRole('button', { name: '성동구', exact: true });
+    await expect(async () => {
+      await chip.click();
+      await expect(page).toHaveURL(/region=성동구|region=%/, { timeout: 1500 });
+    }).toPass({ timeout: 15000 });
     await expect(page.getByText(/성동구 평균 매매가/)).toBeVisible();
     // 차트 SVG로 스코프(dev 인디케이터 SVG 노이즈 제외). area + line = 2 path.
     await expect(page.locator('svg[viewBox="0 0 760 300"] path')).toHaveCount(2, { timeout: 5000 });

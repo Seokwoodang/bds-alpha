@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { canAfford, type InvestMode } from '@/lib/invest';
 import { acquisitionTax, isAdjustedRegion } from '@/lib/tax';
+import { saveProfile } from '@/lib/queries/profile';
+import type { InvestProfile } from '@/lib/queries/profileRead';
 import type { RegionGap } from '@/lib/queries/regions';
 
 interface ListingRow { id: number; title: string; region: string; dong: string | null; price_text: string; price_num: number; area: number }
@@ -12,15 +14,22 @@ interface ListingRow { id: number; title: string; region: string; dong: string |
 const field: React.CSSProperties = { width: '100%', border: '1px solid var(--line)', borderRadius: 10, padding: '11px 13px', fontFamily: 'inherit', fontSize: 15, color: 'var(--ink)', outline: 'none' };
 const e = (n: number) => `${n.toFixed(1)}억`;
 
-export function InvestSimulator() {
+export function InvestSimulator({ initial, loggedIn }: { initial?: InvestProfile | null; loggedIn: boolean }) {
   const [gaps, setGaps] = useState<RegionGap[]>([]);
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [capital, setCapital] = useState(5);
-  const [loan, setLoan] = useState(3);
-  const [owned, setOwned] = useState(0); // 현재 보유 주택 수
-  const [firstTime, setFirstTime] = useState(false); // 생애최초(무주택)
-  const [mode, setMode] = useState<InvestMode>('gap');
+  const [capital, setCapital] = useState(initial?.capital ?? 5);
+  const [loan, setLoan] = useState(initial?.loan ?? 3);
+  const [owned, setOwned] = useState(initial?.owned ?? 0); // 현재 보유 주택 수
+  const [firstTime, setFirstTime] = useState(initial?.firstTime ?? false); // 생애최초(무주택)
+  const [mode, setMode] = useState<InvestMode>(initial?.mode ?? 'gap');
+  const [saving, startSave] = useTransition();
+  const [saved, setSaved] = useState(false);
+
+  function onSave() {
+    setSaved(false);
+    startSave(async () => { await saveProfile({ capital, loan, owned, firstTime, mode }); setSaved(true); });
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -83,6 +92,16 @@ export function InvestSimulator() {
         )}
         <div style={{ fontSize: 12, color: 'var(--muted-2)', marginTop: 12 }}>
           {mode === 'gap' ? '갭투자: 필요자본 = (매매−전세) + 취득세. 전세보증금이 매매대금 레버리지.' : '실거주: 필요자본 = 매매 + 취득세 − 대출.'} 취득세는 <strong>취득 후 {owned + 1}주택</strong> 기준 + 조정대상지역(강남·서초·송파·용산) 중과 + 85㎡초과 농특세를 반영(간이). 실거래 중위가 기준.
+        </div>
+        <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+          {loggedIn ? (
+            <>
+              <button onClick={onSave} disabled={saving} style={{ background: 'var(--navy)', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>내 조건 저장</button>
+              {saved && <span style={{ fontSize: 13, color: 'var(--up)', fontWeight: 700 }}>✓ 저장됨 — 다음에 자동으로 채워집니다</span>}
+            </>
+          ) : (
+            <span style={{ fontSize: 13, color: 'var(--muted)' }}><Link href="/login?returnTo=%2Finvest" style={{ color: 'var(--primary)', fontWeight: 700 }}>로그인</Link>하면 투자 조건을 저장해 다음에 자동으로 불러옵니다.</span>
+          )}
         </div>
       </div>
 
