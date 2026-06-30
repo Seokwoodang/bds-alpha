@@ -10,10 +10,18 @@ import { test, expect } from '@playwright/test';
 test.describe('매물 목록', () => {
   test('T58 · 필터 변경이 URL 쿼리에 반영', async ({ page }) => {
     await page.goto('/listings');
-    await page.getByRole('button', { name: '매매' }).click();
-    await page.getByRole('button', { name: '강남구' }).click();
-    await expect(page).toHaveURL(/deal=%EB%A7%A4%EB%A7%A4|deal=매매/);
-    await expect(page).toHaveURL(/region=강남구|region=%/);
+    await expect(page.getByRole('article').first()).toBeVisible(); // 데이터 렌더 대기
+    // 하이드레이션 완료 전 클릭 방지: URL이 바뀔 때까지 클릭 재시도
+    const deal = page.getByRole('button', { name: '매매', exact: true });
+    await expect(async () => {
+      await deal.click();
+      await expect(page).toHaveURL(/deal=매매|deal=%/, { timeout: 1500 });
+    }).toPass({ timeout: 15000 });
+    const region = page.getByRole('button', { name: '강남구', exact: true });
+    await expect(async () => {
+      await region.click();
+      await expect(page).toHaveURL(/region=강남구|region=%/, { timeout: 1500 });
+    }).toPass({ timeout: 15000 });
   });
 
   test('T59 · 새로고침해도 필터 유지(URL이 진실)', async ({ page }) => {

@@ -9,8 +9,14 @@ const REGION = process.env.SUPABASE_POOLER_REGION || 'aws-1-ap-northeast-2';
 if (!API_KEY || !PW || !REF) { console.error('환경변수(DATA_GO_KR_API_KEY/SUPABASE_DB_PASSWORD/NEXT_PUBLIC_SUPABASE_URL) 필요'); process.exit(1); }
 
 const LAWD = { 강남구: '11680', 서초구: '11650', 송파구: '11710', 용산구: '11170', 성동구: '11200', 마포구: '11440', 광진구: '11215', 영등포구: '11560' };
-const START = process.argv[2] || '2025-05';
-const END = process.argv[3] || '2026-05';
+function recentRange() {
+  const d = new Date(); const end = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  d.setMonth(d.getMonth() - 3); const start = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  return [start, end];
+}
+const [dS, dE] = recentRange();
+const START = process.argv[2] || dS;
+const END = process.argv[3] || dE;
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
 const BASE = 'https://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev';
 

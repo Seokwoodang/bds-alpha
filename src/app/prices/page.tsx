@@ -2,6 +2,7 @@ import { getRegions, getRegionSeries } from '@/lib/queries/regions';
 import { buildSeriesChart, kpiRules } from '@/lib/chart';
 import { PriceChart } from '@/components/PriceChart';
 import { RegionTabs, RegionBars } from '@/components/RegionSelector';
+import { GapAnalysis } from '@/components/GapAnalysis';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,8 @@ export default async function PricesPage({ searchParams }: { searchParams: Promi
       </div>
 
       <RegionBars regions={regions} selected={selected.name} />
+
+      <GapAnalysis selected={selected.name} />
     </div>
   );
 }

@@ -1,0 +1,35 @@
+name: 실거래 수집 (ingest)
+
+# 매주 월요일 03:00 KST(=일 18:00 UTC) 자동 + 수동 실행
+on:
+  schedule:
+    - cron: '0 18 * * 0'
+  workflow_dispatch:
+    inputs:
+      start:
+        description: '시작 월 (YYYY-MM)'
+        required: false
+        default: ''
+      end:
+        description: '끝 월 (YYYY-MM)'
+        required: false
+        default: ''
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      # 기본: 최근 2개월만 갱신(빠름). 수동 실행 시 start/end 지정 가능.
+      - name: 매매 수집
+        run: node scripts/ingest-transactions.mjs "${{ github.event.inputs.start || '' }}" "${{ github.event.inputs.end || '' }}"
+      - name: 전월세 수집
+        run: node scripts/ingest-rents.mjs "${{ github.event.inputs.start || '' }}" "${{ github.event.inputs.end || '' }}"

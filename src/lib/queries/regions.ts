@@ -30,6 +30,20 @@ export async function getRegionSeries(region: string): Promise<{ label: string; 
   return ((data as { label: string; price_eok: number }[]) ?? []).map((d) => ({ label: d.label, value: Number(d.price_eok) }));
 }
 
+export interface RegionGap { region: string; sale_eok: number; jeonse_eok: number; gap_eok: number; jeonse_ratio: number }
+
+/** 지역별 갭(매매-전세)·전세가율(대표평형 60~85㎡, 최근 3개월 중위). */
+export async function getRegionGap(): Promise<RegionGap[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('region_gap');
+  if (error) throw error;
+  return ((data as RegionGap[]) ?? []).map((d) => ({
+    region: d.region,
+    sale_eok: Number(d.sale_eok), jeonse_eok: Number(d.jeonse_eok),
+    gap_eok: Number(d.gap_eok), jeonse_ratio: Number(d.jeonse_ratio),
+  }));
+}
+
 /** 지역+면적대 현재 중위 단가(억). 평가손익 추정용. 데이터 없으면 null. */
 export async function getRegionAreaMedian(region: string, area: number): Promise<number | null> {
   const supabase = await createClient();

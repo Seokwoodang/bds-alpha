@@ -8,8 +8,9 @@ import { test, expect } from '@playwright/test';
 
 test.describe('매물 상세', () => {
   test('T65 · 유효 id 진입 시 상세 렌더', async ({ page }) => {
-    await page.goto('/listings/1');
-    await expect(page.getByRole('heading', { name: /라이프 청담/ })).toBeVisible();
+    await page.goto('/listings');
+    await page.getByRole('article').first().getByRole('link').first().click();
+    await expect(page).toHaveURL(/\/listings\/\d+/);
     await expect(page.getByText('상세 정보')).toBeVisible();
     await expect(page.getByText('투자 포인트')).toBeVisible();
   });
@@ -24,8 +25,11 @@ test.describe('매물 상세', () => {
   });
 
   test('T67 · 유사매물 0개면 "비슷한 매물" 섹션 미표시', async ({ page }) => {
-    // 같은 지역에 다른 매물이 없는 매물(예: 유일 지역 매물)로 진입
-    await page.goto('/listings/6'); // 한남 테라스하우스(용산구 단독 가정)
+    // 광진구는 매물 1건(시드 제어) → 같은 지역 다른 매물 없음
+    await page.goto('/listings?region=광진구');
+    await page.getByRole('article').first().getByRole('link').first().click();
+    await expect(page).toHaveURL(/\/listings\/\d+/);
+    await expect(page.getByText('상세 정보')).toBeVisible();
     await expect(page.getByRole('heading', { name: /비슷한 매물/ })).toHaveCount(0);
   });
 

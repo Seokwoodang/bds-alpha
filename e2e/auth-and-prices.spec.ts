@@ -62,11 +62,20 @@ test.describe('인증', () => {
 test.describe('시세 / 지도', () => {
   test('T70 · 칩/막대 클릭 시 지역·차트·URL 동기화', async ({ page }) => {
     await page.goto('/prices');
+    await page.waitForLoadState('networkidle'); // 하이드레이션 대기(무거운 페이지)
+    await expect(page.getByText('지역별 시세 비교')).toBeVisible();
     await page.getByRole('button', { name: '성동구', exact: true }).click();
     await expect(page).toHaveURL(/region=성동구|region=%/);
     await expect(page.getByText(/성동구 평균 매매가/)).toBeVisible();
     // 차트 SVG로 스코프(dev 인디케이터 SVG 노이즈 제외). area + line = 2 path.
     await expect(page.locator('svg[viewBox="0 0 760 300"] path')).toHaveCount(2, { timeout: 5000 });
+  });
+
+  test('GAP1 · 시세 화면에 갭 투자 분석(전세가율) 표시', async ({ page }) => {
+    await page.goto('/prices?region=강남구');
+    await expect(page.getByText('갭 투자 분석')).toBeVisible();
+    await expect(page.getByRole('table')).toBeVisible();
+    await expect(page.getByText('전세가율 높은 순', { exact: false })).toBeVisible();
   });
 
   test('T76 · 지도 "상세 시세 분석 →" → /prices?region', async ({ page }) => {
