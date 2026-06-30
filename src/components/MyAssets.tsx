@@ -6,6 +6,7 @@ import type { Property } from '@/lib/types';
 import { formatPriceManwon, holdingText, estimatePL } from '@/lib/property';
 import { rentalYield, leaseStatus, nextRentDate, rentText } from '@/lib/rental';
 import { assessedFromMarket, propertyTax, comprehensiveRealEstateTax } from '@/lib/holdingTax';
+import { monthlyRentTotal, cashflow, leaseAlerts } from '@/lib/portfolio';
 import { deleteProperty } from '@/lib/queries/properties';
 import { PropertyForm } from '@/components/PropertyForm';
 import { EmptyState } from '@/components/EmptyState';
@@ -33,6 +34,10 @@ export function MyAssets({ properties, valuations }: { properties: Property[]; v
   const cret = comprehensiveRealEstateTax(totalAssessedEok, properties.length, single);
   const totalHolding = Math.round((totalPropertyTax + cret.tax) * 10) / 10;
   const won = (manwon: number) => `${manwon.toLocaleString('ko-KR')}만원`;
+  // 임대 현금흐름 + 계약 만기 알림
+  const rentTotal = monthlyRentTotal(properties);
+  const cf = cashflow(rentTotal, totalHolding);
+  const alerts = leaseAlerts(properties, now);
 
   return (
     <section style={{ marginTop: 40 }}>
@@ -44,6 +49,18 @@ export function MyAssets({ properties, valuations }: { properties: Property[]; v
           <button onClick={() => setMode('add')} style={{ background: 'var(--primary)', border: 'none', borderRadius: 10, padding: '9px 16px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>+ 자산 추가</button>
         )}
       </div>
+
+      {mode === 'list' && alerts.count > 0 && (
+        <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 14, padding: '14px 18px', marginBottom: 16 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#C2410C', marginBottom: alerts.expired.length || alerts.soon.length ? 6 : 0 }}>
+            ⏰ 계약 만기 주의 {alerts.count}건
+          </div>
+          <div style={{ fontSize: 13, color: '#9A3412', lineHeight: 1.7 }}>
+            {alerts.expired.map((p) => <div key={p.id}><strong>{p.name}</strong> · 만기 경과 — 갱신/정산 필요</div>)}
+            {alerts.soon.map((p) => <div key={p.id}><strong>{p.name}</strong> · 만기 임박(D-{leaseStatus(p.lease_end, now)!.dday}) — 갱신 협의 시점</div>)}
+          </div>
+        </div>
+      )}
 
       {properties.length > 0 && mode === 'list' && (
         <div style={{ background: 'linear-gradient(135deg,var(--navy),#2A4365)', borderRadius: 16, padding: 18, marginBottom: 20, color: '#fff' }}>
@@ -66,6 +83,22 @@ export function MyAssets({ properties, valuations }: { properties: Property[]; v
               <div style={{ fontSize: 16, fontWeight: 700 }}>{cret.totalAssessedEok}억 / {cret.deductionEok}억</div>
             </div>
           </div>
+          {rentTotal > 0 && (
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'baseline', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.15)' }}>
+              <div>
+                <div style={{ fontSize: 11, opacity: 0.7 }}>월 임대수입</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{won(cf.monthlyRent)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, opacity: 0.7 }}>월 보유세(연÷12)</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>−{won(cf.monthlyTax)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, opacity: 0.7 }}>월 순현금흐름</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: cf.netMonthly >= 0 ? '#86EFAC' : '#FCA5A5' }}>{cf.netMonthly >= 0 ? '+' : ''}{won(cf.netMonthly)}</div>
+              </div>
+            </div>
+          )}
           <div style={{ fontSize: 11, opacity: 0.6, marginTop: 10 }}>※ 세부담상한·세액공제·지역자원시설세 미반영. 종부세는 인별 합산({properties.length}채{single ? ' · 1세대1주택 가정' : properties.length >= 3 ? ' · 3주택+ 중과' : ''}) 기준.</div>
         </div>
       )}

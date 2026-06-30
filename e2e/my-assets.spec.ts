@@ -81,6 +81,9 @@ test('PA5 · 임대 물건 등록 → 임대수익률·계약 만기·보유세 
   await expect(page.getByText(/계약 만기 D-/)).toBeVisible();
   await expect(page.getByText('연간 보유세 추정')).toBeVisible();
   await expect(page.getByText(/재산세\(연\)/).first()).toBeVisible();
+  // 현금흐름 + 만기 임박 알림(만기 2026-08-15 → 60일 이내)
+  await expect(page.getByText('월 순현금흐름')).toBeVisible();
+  await expect(page.getByText(/계약 만기 주의/)).toBeVisible();
 
   // 정리
   page.on('dialog', (d) => d.accept());

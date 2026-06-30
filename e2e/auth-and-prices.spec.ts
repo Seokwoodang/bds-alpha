@@ -81,6 +81,19 @@ test.describe('시세 / 지도', () => {
     await expect(page.getByText('전세가율 높은 순', { exact: false })).toBeVisible();
   });
 
+  test('CMP1 · 지역비교 — 지역 선택 시 비교표(전세가율·갭) 렌더', async ({ page }) => {
+    await page.goto('/compare');
+    await expect(page.getByRole('heading', { name: '지역 비교' })).toBeVisible();
+    // 기본 2개 지역 선택 상태로 비교표가 렌더됨
+    await expect(page.getByRole('table')).toBeVisible();
+    await expect(page.getByRole('cell', { name: '전세가율' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: '갭(매매−전세)' })).toBeVisible();
+    // 3번째 지역 추가 → 컬럼 증가
+    const third = page.getByRole('button', { name: '마포구', exact: true });
+    await third.click();
+    await expect(third).toHaveAttribute('aria-pressed', 'true');
+  });
+
   test('T76 · 지도 "상세 시세 분석 →" → /prices?region', async ({ page }) => {
     await page.goto('/map');
     await page.getByRole('link', { name: /상세 시세 분석/ }).click();
