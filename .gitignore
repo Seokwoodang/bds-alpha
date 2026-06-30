@@ -18,3 +18,4 @@ next-env.d.ts
 docs/spec-to-code/bds-alpha/**/screenshots/
 docs/spec-to-code/bds-alpha/v2-screenshots/
 docs/spec-to-code/bds-alpha/*-screenshots/
+.vercel
