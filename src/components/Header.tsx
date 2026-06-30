@@ -8,6 +8,7 @@ const NAV = [
   { label: '홈', href: '/' },
   { label: '매물', href: '/listings' },
   { label: '시세', href: '/prices' },
+  { label: '투자추천', href: '/invest' },
   { label: '가이드', href: '/guides' },
   { label: '지도', href: '/map' },
 ];
