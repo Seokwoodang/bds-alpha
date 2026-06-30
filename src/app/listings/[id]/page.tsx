@@ -7,6 +7,7 @@ import { detailSpecs, detailPoints, dealBadge } from '@/lib/format';
 import { LISTING_COVER } from '@/lib/cover';
 import { ListingCard } from '@/components/ListingCard';
 import { HeartButton } from '@/components/HeartButton';
+import { RegistryLink } from '@/components/RegistryLink';
 import { BackLink } from '@/components/BackLink';
 
 // force-dynamic을 두지 않음: 쿠키(Supabase 세션) 사용으로 어차피 동적이며,
@@ -93,6 +94,7 @@ export default async function DetailPage({ params }: { params: Promise<{ id: str
             </div>
             <button disabled aria-label="상담 신청하기 (준비 중)" style={{ width: '100%', background: 'var(--primary)', border: 'none', borderRadius: 12, padding: 15, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'not-allowed', opacity: 0.55, marginBottom: 10, fontFamily: 'inherit' }}>상담 신청하기 (준비 중)</button>
             <HeartButton listingId={listing.id} isSaved={savedSet.has(listing.id)} returnTo={returnTo} variant="detail" />
+            <RegistryLink address={`${listing.region} ${listing.dong} ${listing.title}`} />
           </div>
         </div>
       </div>

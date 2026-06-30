@@ -26,6 +26,16 @@ test.describe('매물 상세', () => {
     await expect(page.getByText('중과').first()).toBeVisible();
   });
 
+  test('REG1 · 매물 상세에 등기열람 링크(인터넷등기소, 새 탭) + 주소 복사', async ({ page }) => {
+    await page.goto('/listings');
+    await page.getByRole('article').first().getByRole('link').first().click();
+    await expect(page).toHaveURL(/\/listings\/\d+/);
+    const link = page.getByRole('link', { name: /등기열람/ });
+    await expect(link).toHaveAttribute('href', /iros\.go\.kr/);
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(page.getByRole('button', { name: '주소 복사' })).toBeVisible();
+  });
+
   test('T66 · 없는 id 딥링크 → not-found 페이지(함수적 404)', async ({ page }) => {
     await page.goto('/listings/9999');
     // notFound()가 트리거되어 전용 not-found 페이지 렌더(정상 상세 아님).
