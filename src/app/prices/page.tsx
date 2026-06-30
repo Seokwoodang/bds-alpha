@@ -1,5 +1,5 @@
-import { getRegions } from '@/lib/queries/regions';
-import { buildChart, kpiRules } from '@/lib/chart';
+import { getRegions, getRegionSeries } from '@/lib/queries/regions';
+import { buildSeriesChart, kpiRules } from '@/lib/chart';
 import { PriceChart } from '@/components/PriceChart';
 import { RegionTabs, RegionBars } from '@/components/RegionSelector';
 
@@ -9,13 +9,14 @@ export default async function PricesPage({ searchParams }: { searchParams: Promi
   const { region } = await searchParams;
   const regions = await getRegions();
   const selected = regions.find((r) => r.name === region) ?? regions[0];
-  const chart = buildChart(selected.price);
+  const series = await getRegionSeries(selected.name);
+  const chart = buildSeriesChart(series.map((s) => s.value), series.map((s) => s.label));
   const kpis = kpiRules(selected);
 
   return (
     <div className="bds-fade" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 64px' }}>
       <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--navy)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>시세 분석</h1>
-      <p style={{ fontSize: 15, color: '#7286A0', margin: '0 0 24px' }}>지역별 실거래 시세 흐름과 변동률을 확인하세요. (84㎡ 아파트 평균 매매가 기준)</p>
+      <p style={{ fontSize: 15, color: '#7286A0', margin: '0 0 24px' }}>지역별 실거래 시세 흐름과 변동률을 확인하세요. (국토교통부 아파트 실거래가 · 월별 중위 매매가 기준)</p>
 
       <RegionTabs regions={regions} selected={selected.name} />
 
@@ -34,7 +35,7 @@ export default async function PricesPage({ searchParams }: { searchParams: Promi
 
       <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 18, padding: 24, marginBottom: 24 }}>
         <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--navy)', marginBottom: 4 }}>{`${selected.name} 시세 추이`}</div>
-        <div style={{ fontSize: 13, color: '#8499B3', marginBottom: 16 }}>최근 12개월 · 단위 억원</div>
+        <div style={{ fontSize: 13, color: '#8499B3', marginBottom: 16 }}>최근 13개월 · 국토부 실거래 중위가(억) · 월별</div>
         <PriceChart data={chart} />
       </div>
 

@@ -1,5 +1,16 @@
 # Change Log — 부동산알파 (bds-alpha)
 
+## 2026-06-30 · update v3 — done — 국토부 실거래가 연동(실 시세·평가손익)
+### 추가
+- 국토부 아파트 매매 실거래가 OpenAPI 수집 파이프라인(`ingest-transactions.mjs`) → `transactions` 26,076건(2025-05~2026-05)
+- 집계 RPC(중위값): `region_price_summary`/`region_series`/`region_area_median`
+- 시세 화면·홈 통계·지도·막대 전부 **실데이터**로 교체, 보유 자산 **평가손익(현재 추정가 ±%)** 표시
+### 테스트/회귀
+- vitest 67/67(+5: buildSeriesChart·estimatePL) · e2e 33 pass/1 skip · 무회귀. 라이브 검증.
+### 다음
+- 전월세 실거래 수집 → 갭/전세가율 · 시세 평활(평형대 필터) · 수집 자동화
+
+
 ## 2026-06-30 · update v2 — done — 내 집 등록(보유 자산 관리)
 ### 추가
 - `properties` 테이블 + RLS(본인 행만) · 마이페이지 '내 보유 자산' 섹션(등록/수정/삭제)

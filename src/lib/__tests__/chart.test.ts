@@ -10,7 +10,7 @@
  *   barHeight(price, max): number = 24 + (price/max)*150
  */
 import { describe, it, expect } from 'vitest';
-import { buildChart, kpiRules, barHeight } from '@/lib/chart';
+import { buildChart, buildSeriesChart, kpiRules, barHeight } from '@/lib/chart';
 import type { Region } from '@/lib/types';
 
 describe('buildChart', () => {
@@ -35,6 +35,22 @@ describe('buildChart', () => {
   });
   it('T39 · 가로 그리드 라인 5개', () => {
     expect(buildChart(24.0).grid).toHaveLength(5);
+  });
+});
+
+describe('buildSeriesChart (실데이터 시계열)', () => {
+  it('값 개수만큼 dots/xlabels, viewBox 760×300, cur=마지막값', () => {
+    const vals = [26.6, 28.9, 25.0, 19.0, 21.3, 23.0, 24.0, 20.1, 23.0, 23.5, 21.5, 26.7, 27.0];
+    const lbls = ['05', '06', '07', '08', '09', '10', '11', '12', '01', '02', '03', '04', '05'];
+    const c = buildSeriesChart(vals, lbls);
+    expect(c.dots).toHaveLength(13);
+    expect(c.xlabels).toHaveLength(13);
+    expect(c.viewBox).toBe('0 0 760 300');
+    expect(c.cur).toBe('27.0');
+    expect(c.grid).toHaveLength(5);
+  });
+  it('빈 시계열도 안전(throw 없음)', () => {
+    expect(() => buildSeriesChart([], [])).not.toThrow();
   });
 });
 

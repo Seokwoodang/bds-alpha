@@ -3,12 +3,12 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Property } from '@/lib/types';
-import { formatPriceManwon, holdingText } from '@/lib/property';
+import { formatPriceManwon, holdingText, estimatePL } from '@/lib/property';
 import { deleteProperty } from '@/lib/queries/properties';
 import { PropertyForm } from '@/components/PropertyForm';
 import { EmptyState } from '@/components/EmptyState';
 
-export function MyAssets({ properties }: { properties: Property[] }) {
+export function MyAssets({ properties, valuations }: { properties: Property[]; valuations: Record<string, number | null> }) {
   const router = useRouter();
   const [mode, setMode] = useState<'list' | 'add' | { edit: Property }>('list');
   const [, startTransition] = useTransition();
@@ -40,7 +40,10 @@ export function MyAssets({ properties }: { properties: Property[] }) {
         <EmptyState icon="🏠" title="등록된 보유 자산이 없어요" desc="보유 중인 집을 등록하면 한곳에서 관리할 수 있어요." />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
-          {properties.map((p) => (
+          {properties.map((p) => {
+            const pl = estimatePL(p.purchase_price, valuations[p.id] ?? null);
+            const up = pl ? pl.diffEok >= 0 : false;
+            return (
             <div key={p.id} style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 18 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', background: 'var(--primary-soft)', padding: '2px 8px', borderRadius: 5 }}>{p.type}</span>
@@ -54,9 +57,22 @@ export function MyAssets({ properties }: { properties: Property[] }) {
                 <button onClick={() => setMode({ edit: p })} style={{ flex: 1, background: '#fff', border: '1px solid var(--line)', borderRadius: 9, padding: '8px', fontSize: 13, fontWeight: 700, color: 'var(--ink)', cursor: 'pointer', fontFamily: 'inherit' }}>수정</button>
                 <button onClick={() => remove(p)} style={{ flex: 1, background: '#fff', border: '1px solid var(--line)', borderRadius: 9, padding: '8px', fontSize: 13, fontWeight: 700, color: 'var(--down)', cursor: 'pointer', fontFamily: 'inherit' }}>삭제</button>
               </div>
-              <div style={{ fontSize: 11, color: 'var(--muted-2)', marginTop: 10 }}>평가손익은 실거래가 연동 후 제공됩니다.</div>
+              {pl ? (
+                <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed var(--line)' }}>
+                  <div style={{ fontSize: 12, color: '#8499B3', fontWeight: 600 }}>현재 추정가 (지역·면적대 중위)</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 2 }}>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--navy)' }}>{pl.currentEok}억</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: up ? 'var(--up)' : 'var(--down)' }}>
+                      {up ? '▲' : '▼'} {Math.abs(pl.diffEok)}억 ({up ? '+' : ''}{pl.pct}%)
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: 11, color: 'var(--muted-2)', marginTop: 10 }}>비교 실거래가 부족해 평가손익을 산출하지 못했어요.</div>
+              )}
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
     </section>

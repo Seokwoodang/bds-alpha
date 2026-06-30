@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getSaved } from '@/lib/queries/savedRead';
 import { getProperties } from '@/lib/queries/propertiesRead';
+import { getRegionAreaMedian } from '@/lib/queries/regions';
 import { getListingsByIds, countListings } from '@/lib/queries/listings';
 import { ListingCard } from '@/components/ListingCard';
 import { EmptyState } from '@/components/EmptyState';
@@ -17,6 +18,10 @@ export default async function MyPage() {
   const savedIds = await getSaved();
   const [savedListings, total, properties] = await Promise.all([getListingsByIds(savedIds), countListings(), getProperties()]);
   const savedSet = new Set(savedIds);
+
+  // 보유 자산 평가손익용: 지역+면적대 현재 중위가(억) 조회
+  const valEntries = await Promise.all(properties.map(async (p) => [p.id, await getRegionAreaMedian(p.region, p.area)] as const));
+  const valuations: Record<string, number | null> = Object.fromEntries(valEntries);
 
   const stats = [
     { label: '관심 매물', value: `${savedIds.length}개` },
@@ -54,7 +59,7 @@ export default async function MyPage() {
         <EmptyState icon="♡" title="아직 저장한 매물이 없어요" desc="마음에 드는 매물의 하트를 눌러 저장해 보세요." cta={{ label: '매물 둘러보기', href: '/listings' }} />
       )}
 
-      <MyAssets properties={properties} />
+      <MyAssets properties={properties} valuations={valuations} />
     </div>
   );
 }

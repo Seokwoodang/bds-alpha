@@ -53,3 +53,14 @@ export function validateProperty(input: PropertyInput, now: Date): PropertyError
 export function hasErrors(e: PropertyErrors): boolean {
   return Object.keys(e).length > 0;
 }
+
+export interface Valuation { currentEok: number; purchaseEok: number; diffEok: number; pct: number }
+
+/** 평가손익 추정: 매입가(만원) vs 현재 지역+면적대 중위가(억). 비교가 없으면 null. */
+export function estimatePL(purchaseManwon: number, currentEok: number | null): Valuation | null {
+  if (currentEok == null || !(purchaseManwon > 0)) return null;
+  const purchaseEok = purchaseManwon / 10000;
+  const diffEok = Math.round((currentEok - purchaseEok) * 10) / 10;
+  const pct = Math.round((diffEok / purchaseEok) * 1000) / 10;
+  return { currentEok, purchaseEok: Math.round(purchaseEok * 10) / 10, diffEok, pct };
+}

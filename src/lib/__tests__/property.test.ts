@@ -2,7 +2,7 @@
  * v2 — 내 집 등록 순수 로직(property.ts): 가격 포맷·보유기간·검증.
  */
 import { describe, it, expect } from 'vitest';
-import { formatPriceManwon, holdingMonths, holdingText, validateProperty } from '@/lib/property';
+import { formatPriceManwon, holdingMonths, holdingText, validateProperty, estimatePL } from '@/lib/property';
 import type { PropertyInput } from '@/lib/types';
 
 describe('formatPriceManwon', () => {
@@ -40,4 +40,18 @@ describe('validateProperty', () => {
   it('매입가 빈값', () => { expect(validateProperty({ ...valid, purchase_price: '' }, now).purchase_price).toBeTruthy(); });
   it('미래 매입일 거부', () => { expect(validateProperty({ ...valid, purchase_date: '2027-01-01' }, now).purchase_date).toBeTruthy(); });
   it('빈 매입일', () => { expect(validateProperty({ ...valid, purchase_date: '' }, now).purchase_date).toBeTruthy(); });
+});
+
+describe('estimatePL', () => {
+  it('상승: 매입 24.5억 → 현재 27.0억', () => {
+    const v = estimatePL(245000, 27.0)!;
+    expect(v.diffEok).toBe(2.5);
+    expect(v.pct).toBeCloseTo(10.2, 1);
+  });
+  it('하락: 매입 30억 → 현재 27억', () => {
+    const v = estimatePL(300000, 27.0)!;
+    expect(v.diffEok).toBe(-3);
+    expect(v.pct).toBeCloseTo(-10, 1);
+  });
+  it('비교가 없으면 null', () => { expect(estimatePL(245000, null)).toBeNull(); });
 });
