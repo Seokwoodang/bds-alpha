@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getSaved } from '@/lib/queries/savedRead';
+import { getProperties } from '@/lib/queries/propertiesRead';
 import { getListingsByIds, countListings } from '@/lib/queries/listings';
 import { ListingCard } from '@/components/ListingCard';
 import { EmptyState } from '@/components/EmptyState';
+import { MyAssets } from '@/components/MyAssets';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,12 +15,12 @@ export default async function MyPage() {
   if (!user) redirect('/login?returnTo=%2Fmypage'); // 미들웨어 가드 + 이중 방어
 
   const savedIds = await getSaved();
-  const [savedListings, total] = await Promise.all([getListingsByIds(savedIds), countListings()]);
+  const [savedListings, total, properties] = await Promise.all([getListingsByIds(savedIds), countListings(), getProperties()]);
   const savedSet = new Set(savedIds);
 
   const stats = [
     { label: '관심 매물', value: `${savedIds.length}개` },
-    { label: '최근 본 지역', value: '—' }, // AD8: 별도 조회기록 추적 없음(프록시 미구현)
+    { label: '보유 자산', value: `${properties.length}개` },
     { label: '추천 매물', value: `${total}개` },
   ];
 
@@ -51,6 +53,8 @@ export default async function MyPage() {
       ) : (
         <EmptyState icon="♡" title="아직 저장한 매물이 없어요" desc="마음에 드는 매물의 하트를 눌러 저장해 보세요." cta={{ label: '매물 둘러보기', href: '/listings' }} />
       )}
+
+      <MyAssets properties={properties} />
     </div>
   );
 }

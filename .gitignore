@@ -15,4 +15,5 @@ next-env.d.ts
 .spec-to-code-state.json
 
 # 시각 검증 스크린샷(로컬 유지, 레포 제외)
-docs/spec-to-code/bds-alpha/v1/screenshots/
+docs/spec-to-code/bds-alpha/**/screenshots/
+docs/spec-to-code/bds-alpha/v2-screenshots/

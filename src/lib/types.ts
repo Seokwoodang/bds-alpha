@@ -42,6 +42,32 @@ export interface SavedRow {
   created_at: string;
 }
 
+export interface Property {
+  id: string;
+  user_id: string;
+  name: string;
+  region: string;
+  dong: string | null;
+  type: PType;
+  area: number;
+  purchase_price: number; // 만원
+  purchase_date: string; // YYYY-MM-DD
+  memo: string | null;
+  created_at: string;
+}
+
+/** 내 집 등록 폼 입력(검증 대상). */
+export interface PropertyInput {
+  name: string;
+  region: string;
+  dong?: string;
+  type: string;
+  area: number | '';
+  purchase_price: number | '';
+  purchase_date: string;
+  memo?: string;
+}
+
 export interface QuerySpec {
   deal: Deal | '전체';
   region: string; // '전체' | 지역명

@@ -1,5 +1,17 @@
 # Change Log — 부동산알파 (bds-alpha)
 
+## 2026-06-30 · update v2 — done — 내 집 등록(보유 자산 관리)
+### 추가
+- `properties` 테이블 + RLS(본인 행만) · 마이페이지 '내 보유 자산' 섹션(등록/수정/삭제)
+- 순수 로직 `property.ts`(검증·가격포맷·보유기간) + 서버 액션 CRUD + 폼/목록 컴포넌트
+### 결정
+- 자유입력 + 지역 8개 선택 · CRUD 전부 · 마이페이지 섹션 · 손익은 실거래가 연동(v3) 후
+### 테스트/회귀
+- vitest 62/62(+15) · e2e 33 pass/1 skip(+my-assets 3) · 무회귀. 라이브 Supabase 검증.
+### 다음
+- v3: 공공데이터포털 실거래가 API 연동 → 평가손익·시세비교·갭/상승 분석
+
+
 ## 2026-06-23 · fresh (docs scope) — done (Tests 게이트 정지)
 ### 한 일
 - Phase 1–6 완료: 정규화 → gap 그리드(인라인+자가 critic; fan-out은 인프라 장애로 대체) → Gate-1 승인 → 설계 → RED 테스트.
