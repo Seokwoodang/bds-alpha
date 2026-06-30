@@ -60,4 +60,28 @@ describe('acquisitionTax', () => {
     expect(t.farmRatePct).toBe(0.2);
     expect(t.totalRatePct).toBe(1.3);
   });
+
+  it('생애최초 감면: 무주택 5억 → 취득세 0.05에서 200만원(0.02) 감면', () => {
+    const t = acquisitionTax(5, 84, 1, false, { firstTime: true });
+    expect(t.reduction).toBeCloseTo(0.02, 4);
+    expect(t.acqTax).toBeCloseTo(0.03, 4); // 0.05 - 0.02
+    expect(t.total).toBeCloseTo(0.035, 4); // 0.03 + 지방교육세 0.005
+    expect(t.label).toContain('생애최초');
+  });
+
+  it('생애최초: 12억 초과면 감면 없음', () => {
+    expect(acquisitionTax(13, 84, 1, false, { firstTime: true }).reduction).toBe(0);
+  });
+
+  it('일시적 2주택: 조정 15억이라도 8% 중과 대신 일반세율(3%)', () => {
+    const t = acquisitionTax(15, 84, 2, true, { temporary2: true });
+    expect(t.acqRatePct).toBe(3);
+    expect(t.heavy).toBe(false);
+    expect(t.totalRatePct).toBe(3.3);
+    expect(t.label).toContain('일시적');
+  });
+
+  it('일시적 2주택 옵션은 3주택엔 영향 없음', () => {
+    expect(acquisitionTax(15, 84, 3, true, { temporary2: true }).acqRatePct).toBe(12);
+  });
 });

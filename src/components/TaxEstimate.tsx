@@ -8,11 +8,17 @@ const e = (n: number) => `${n.toFixed(2)}억`;
 /** 매물 상세 취득세 계산 — 이 매물(가격·면적·지역)을 보유 N주택 상태에서 살 때. */
 export function TaxEstimate({ priceEok, area, region, ownedDefault }: { priceEok: number; area: number; region: string; ownedDefault: number }) {
   const [owned, setOwned] = useState(ownedDefault);
+  const [firstTime, setFirstTime] = useState(false);
+  const [temporary2, setTemporary2] = useState(false);
   const adjusted = isAdjustedRegion(region);
-  const t = acquisitionTax(priceEok, area, owned + 1, adjusted);
+  const t = acquisitionTax(priceEok, area, owned + 1, adjusted, {
+    firstTime: owned === 0 && firstTime,
+    temporary2: owned === 1 && temporary2,
+  });
 
   const rows: [string, string][] = [
-    [`취득세 (${t.acqRatePct}%)`, e(t.acqTax)],
+    [`취득세 (${t.acqRatePct}%)`, e(t.acqTax + t.reduction)],
+    ...(t.reduction > 0 ? [['생애최초 감면', `-${e(t.reduction)}`] as [string, string]] : []),
     [`지방교육세 (${t.eduRatePct}%)`, e(t.eduTax)],
     ...(t.farmRatePct > 0 ? [[`농어촌특별세 (${t.farmRatePct}%, 85㎡초과)`, e(t.farmTax)] as [string, string]] : []),
   ];
@@ -24,11 +30,25 @@ export function TaxEstimate({ priceEok, area, region, ownedDefault }: { priceEok
         {region} {adjusted ? <span style={{ color: 'var(--down)', fontWeight: 700 }}>조정대상지역</span> : '비조정지역'} · 전용 {area}㎡ · 취득 후 {owned + 1}주택 기준 ({t.label})
       </div>
 
-      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)', display: 'block', marginBottom: 16 }}>
+      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)', display: 'block', marginBottom: 12 }}>
         현재 보유 주택 수
         <input type="number" min="0" step="1" value={owned} onChange={(ev) => setOwned(Math.max(0, Math.floor(Number(ev.target.value))))} aria-label="현재 보유 주택 수"
           style={{ display: 'block', width: 120, marginTop: 6, border: '1px solid var(--line)', borderRadius: 9, padding: '9px 12px', fontFamily: 'inherit', fontSize: 15 }} />
       </label>
+
+      {owned === 0 && (
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--ink)', marginBottom: 8, cursor: 'pointer' }}>
+          <input type="checkbox" checked={firstTime} onChange={(ev) => setFirstTime(ev.target.checked)} />
+          생애최초 구입 (무주택 · 12억 이하, 취득세 최대 200만원 감면)
+        </label>
+      )}
+      {owned === 1 && (
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--ink)', marginBottom: 8, cursor: 'pointer' }}>
+          <input type="checkbox" checked={temporary2} onChange={(ev) => setTemporary2(ev.target.checked)} />
+          일시적 2주택 (종전주택 3년 내 처분 예정 → 일반세율 적용)
+        </label>
+      )}
+      <div style={{ marginBottom: 16 }} />
 
       <div>
         {rows.map(([k, v]) => (

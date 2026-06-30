@@ -19,6 +19,7 @@ export function InvestSimulator() {
   const [capital, setCapital] = useState(5);
   const [loan, setLoan] = useState(3);
   const [owned, setOwned] = useState(0); // 현재 보유 주택 수
+  const [firstTime, setFirstTime] = useState(false); // 생애최초(무주택)
   const [mode, setMode] = useState<InvestMode>('gap');
 
   useEffect(() => {
@@ -37,17 +38,17 @@ export function InvestSimulator() {
   const budget = mode === 'gap' ? capital + loan : capital;
 
   const regionRecs = useMemo(() => gaps
-    .map((g) => { const tax = acquisitionTax(g.sale_eok, 84, owned + 1, isAdjustedRegion(g.region)); return { g, tax, r: canAfford(mode, g.sale_eok, g.jeonse_eok, capital, loan, tax.total) }; })
+    .map((g) => { const tax = acquisitionTax(g.sale_eok, 84, owned + 1, isAdjustedRegion(g.region), { firstTime: owned === 0 && firstTime }); return { g, tax, r: canAfford(mode, g.sale_eok, g.jeonse_eok, capital, loan, tax.total) }; })
     .filter((x) => x.r.afford)
     .sort((a, b) => mode === 'gap' ? b.g.jeonse_ratio - a.g.jeonse_ratio : a.r.need - b.r.need),
-    [gaps, mode, capital, loan, owned]);
+    [gaps, mode, capital, loan, owned, firstTime]);
 
   const listingRecs = useMemo(() => listings
-    .map((l) => { const sale = l.price_num / 10000; const jeonse = jeonseByRegion[l.region] ?? 0; const tax = acquisitionTax(sale, l.area, owned + 1, isAdjustedRegion(l.region)); return { l, sale, tax, r: canAfford(mode, sale, jeonse, capital, loan, tax.total) }; })
+    .map((l) => { const sale = l.price_num / 10000; const jeonse = jeonseByRegion[l.region] ?? 0; const tax = acquisitionTax(sale, l.area, owned + 1, isAdjustedRegion(l.region), { firstTime: owned === 0 && firstTime }); return { l, sale, tax, r: canAfford(mode, sale, jeonse, capital, loan, tax.total) }; })
     .filter((x) => x.r.afford)
     .sort((a, b) => a.r.need - b.r.need)
     .slice(0, 12),
-    [listings, jeonseByRegion, mode, capital, loan, owned]);
+    [listings, jeonseByRegion, mode, capital, loan, owned, firstTime]);
 
   return (
     <div>
@@ -74,6 +75,12 @@ export function InvestSimulator() {
             <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--primary)' }}>{e(budget)}</div>
           </div>
         </div>
+        {owned === 0 && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink)', marginTop: 14, cursor: 'pointer' }}>
+            <input type="checkbox" checked={firstTime} onChange={(ev) => setFirstTime(ev.target.checked)} />
+            생애최초 구입 (취득세 최대 200만원 감면 반영)
+          </label>
+        )}
         <div style={{ fontSize: 12, color: 'var(--muted-2)', marginTop: 12 }}>
           {mode === 'gap' ? '갭투자: 필요자본 = (매매−전세) + 취득세. 전세보증금이 매매대금 레버리지.' : '실거주: 필요자본 = 매매 + 취득세 − 대출.'} 취득세는 <strong>취득 후 {owned + 1}주택</strong> 기준 + 조정대상지역(강남·서초·송파·용산) 중과 + 85㎡초과 농특세를 반영(간이). 실거래 중위가 기준.
         </div>
