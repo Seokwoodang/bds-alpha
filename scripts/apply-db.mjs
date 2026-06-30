@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 
 const pw = process.env.SUPABASE_DB_PASSWORD;
 if (!pw) { console.error('환경변수 SUPABASE_DB_PASSWORD가 필요합니다.'); process.exit(1); }
-const ref = 'zvbysnzonvgsgtwmzvqi';
+const ref = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace('https://', '').split('.')[0];
+if (!ref) { console.error('NEXT_PUBLIC_SUPABASE_URL이 필요합니다.'); process.exit(1); }
 
 // 시도 순서: 직접(IPv6/4) → 세션 풀러(여러 리전 추정)
 const regions = ['ap-northeast-2', 'ap-northeast-1', 'ap-southeast-1', 'us-east-1', 'us-west-1', 'eu-central-1', 'us-east-2'];
