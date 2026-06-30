@@ -7,6 +7,7 @@ import { getListingsByIds, countListings } from '@/lib/queries/listings';
 import { ListingCard } from '@/components/ListingCard';
 import { EmptyState } from '@/components/EmptyState';
 import { MyAssets } from '@/components/MyAssets';
+import { GainTaxCalculator } from '@/components/GainTaxCalculator';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +61,8 @@ export default async function MyPage() {
       )}
 
       <MyAssets properties={properties} valuations={valuations} />
+
+      <GainTaxCalculator />
     </div>
   );
 }

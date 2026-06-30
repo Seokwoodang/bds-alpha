@@ -51,6 +51,16 @@ test('PA2 · 자산 등록 → 목록 표시 → 수정 → 삭제', async ({ pa
   await expect(page.getByText(NAME)).toHaveCount(0);
 });
 
+test('PA4 · 양도세 계산기 — 1세대1주택 비과세 / 해제 시 과세', async ({ page }) => {
+  await login(page);
+  await expect(page.getByRole('heading', { name: '양도세 계산기' })).toBeVisible();
+  // 기본(1세대1주택, 8억, 5년) → 비과세
+  await expect(page.getByText('비과세 — 양도세 0원')).toBeVisible();
+  // 1세대1주택 해제 → 과세(총 양도세 표시)
+  await page.getByRole('checkbox', { name: '1세대 1주택' }).uncheck();
+  await expect(page.getByText('총 양도세')).toBeVisible();
+});
+
 test('PA3 · 빈 폼 제출 시 검증 오류 표시', async ({ page }) => {
   await login(page);
   await page.getByRole('button', { name: '+ 자산 추가' }).click();
