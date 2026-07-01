@@ -4,6 +4,7 @@ import { PriceTrend } from '@/components/PriceTrend';
 import { RegionPicker } from '@/components/RegionPicker';
 import { RegionIngestGate } from '@/components/RegionIngestGate';
 import { RegionBars } from '@/components/RegionSelector';
+import { RegionListings } from '@/components/RegionListings';
 import { GapAnalysis } from '@/components/GapAnalysis';
 import { CODE_TO_SIGUNGU } from '@/lib/regions-kr';
 
@@ -53,6 +54,8 @@ export default async function PricesPage({ searchParams }: { searchParams: Promi
           </div>
 
           <PriceTrend region={sgg.name} initialMonthly={series} code={code} />
+
+          <div style={{ marginBottom: 28 }}><RegionListings code={code} region={sgg.name} /></div>
 
           <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--navy)', margin: '8px 0 14px', letterSpacing: '-0.02em' }}>주요 지역 비교</h2>
           <RegionBars regions={regions} selected={sgg.name} />

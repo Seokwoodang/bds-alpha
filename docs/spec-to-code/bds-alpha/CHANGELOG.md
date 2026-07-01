@@ -1,5 +1,15 @@
 # Change Log — 부동산알파 (bds-alpha)
 
+## 2026-07-01 · update v13 — done — 지도 전국 탐색 + 지역별 개별 실거래
+### 추가
+- **지도(/map) 전국 탐색**: 서울 SVG 지도 유지 + 하단 `NationwideExplorer`(시/도→시군구 카드, 캐시 지역은 중위가·전세가율 미리보기, 그 외 클릭 시 온디맨드).
+- **개별 매물 전국**: `region_listings_code()` RPC + `RegionListings`(선택 시군구 최근 개별 실거래 목록) → /prices에 표시. 집계로 불가했던 "개별 매물"을 온디맨드 raw로 전국 커버.
+### 검증
+- vitest 120 · e2e 46 pass/1 skip(+MAP2 전국탐색, +LIST_NAT 개별 실거래).
+### 비고
+- /listings(큐레이션 43건·하트/저장/상세)는 그대로 유지. 전국 개별 매물은 /prices의 "최근 실거래"로 제공(하트/상세 없는 원자료 목록).
+
+
 ## 2026-07-01 · update v12 — done — 전국화 확장(지역비교·투자추천·cron)
 ### 추가
 - **지역비교(/compare) 전국화**: 8개 구 칩 → 시/도→시군구 선택 + 미수집 지역 온디맨드 수집(`RegionCompare` 재작성). 코드 기반 summary/gap.

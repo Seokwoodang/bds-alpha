@@ -118,4 +118,17 @@ test.describe('시세 / 지도', () => {
     await page.getByRole('link', { name: /상세 시세 분석/ }).click();
     await expect(page).toHaveURL(/\/prices\?code=/);
   });
+
+  test('MAP2 · 전국 지역 탐색 — 시도 선택 시 시군구 카드', async ({ page }) => {
+    await page.goto('/map');
+    await expect(page.getByRole('heading', { name: '전국 지역 탐색' })).toBeVisible();
+    await page.getByLabel('시도 선택').selectOption('부산광역시');
+    await expect(page.getByRole('link', { name: /해운대구/ })).toBeVisible();
+  });
+
+  test('LIST_NAT · 시세 화면에 지역별 최근 실거래(개별 매물) 표시', async ({ page }) => {
+    await page.goto('/prices?code=11680');
+    await expect(page.getByRole('heading', { name: /강남구 최근 실거래/ })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: '단지' })).toBeVisible({ timeout: 8000 });
+  });
 });
