@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { Region } from '@/lib/types';
+import { NAME_TO_SIGUNGU } from '@/lib/regions-kr';
 
 const POS: Record<string, [number, number]> = {
   강남구: [62, 66], 서초구: [49, 68], 송파구: [77, 60], 용산구: [44, 50],
@@ -53,7 +54,7 @@ export function MapView({ regions, selected }: { regions: Region[]; selected: st
             );
           })}
         </div>
-        <Link href={`/prices?region=${encodeURIComponent(selected)}`} style={{ display: 'block', textAlign: 'center', width: '100%', marginTop: 14, background: 'var(--navy)', borderRadius: 12, padding: 14, color: '#fff', fontSize: 15, fontWeight: 700 }}>
+        <Link href={`/prices?code=${NAME_TO_SIGUNGU[selected]?.code ?? '11680'}`} style={{ display: 'block', textAlign: 'center', width: '100%', marginTop: 14, background: 'var(--navy)', borderRadius: 12, padding: 14, color: '#fff', fontSize: 15, fontWeight: 700 }}>
           {selected} 상세 시세 분석 →
         </Link>
       </div>

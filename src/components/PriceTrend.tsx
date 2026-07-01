@@ -12,23 +12,27 @@ type Point = { label: string; value: number };
  * 시세 추이 차트 + 월간/주간 토글.
  * 월간 시계열은 서버에서 계산해 넘겨(initialMonthly) 첫 페인트 즉시. 주간은 최초 선택 시 브라우저에서 조회·캐시.
  */
-export function PriceTrend({ region, initialMonthly }: { region: string; initialMonthly: Point[] }) {
+export function PriceTrend({ region, initialMonthly, code }: { region: string; initialMonthly: Point[]; code?: string }) {
   const [gran, setGran] = useState<Gran>('month');
   const [weekly, setWeekly] = useState<Point[] | null>(null);
   const [loading, setLoading] = useState(false);
 
   // 지역이 바뀌면 월간으로 리셋 + 주간 캐시 무효화
-  useEffect(() => { setGran('month'); setWeekly(null); }, [region]);
+  useEffect(() => { setGran('month'); setWeekly(null); }, [region, code]);
 
   useEffect(() => {
     if (gran !== 'week' || weekly !== null) return;
     setLoading(true);
     const supabase = createClient();
-    supabase.rpc('region_series_weekly', { p_region: region }).then(({ data }) => {
+    // 코드가 있으면 코드 기반 주간 RPC(전국), 없으면 이름 기반(기존 8개 구)
+    const call = code
+      ? supabase.rpc('region_series_weekly_code', { p_lawd: code })
+      : supabase.rpc('region_series_weekly', { p_region: region });
+    call.then(({ data }) => {
       setWeekly(((data as { label: string; price_eok: number }[]) ?? []).map((d) => ({ label: d.label, value: Number(d.price_eok) })));
       setLoading(false);
     });
-  }, [gran, region, weekly]);
+  }, [gran, region, code, weekly]);
 
   const points = gran === 'month' ? initialMonthly : (weekly ?? []);
   const chart = buildSeriesChart(points.map((p) => p.value), points.map((p) => p.label));

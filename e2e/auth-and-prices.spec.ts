@@ -60,22 +60,27 @@ test.describe('인증', () => {
 });
 
 test.describe('시세 / 지도', () => {
-  test('T70 · 칩/막대 클릭 시 지역·차트·URL 동기화', async ({ page }) => {
-    await page.goto('/prices');
-    await expect(page.getByText('지역별 시세 비교')).toBeVisible();
-    // 하이드레이션 완료 전 클릭 방지: URL 바뀔 때까지 재시도
-    const chip = page.getByRole('button', { name: '성동구', exact: true });
-    await expect(async () => {
-      await chip.click();
-      await expect(page).toHaveURL(/region=성동구|region=%/, { timeout: 1500 });
-    }).toPass({ timeout: 15000 });
-    await expect(page.getByText(/성동구 평균 매매가/)).toBeVisible();
-    // 차트 SVG로 스코프(dev 인디케이터 SVG 노이즈 제외). area + line = 2 path.
-    await expect(page.locator('svg[viewBox="0 0 760 300"] path')).toHaveCount(2, { timeout: 5000 });
+  test('T70 · 시군구 선택 시 지역·차트·URL(code) 동기화', async ({ page }) => {
+    await page.goto('/prices?code=11680'); // 강남구
+    await expect(page.getByText(/강남구 중위 매매가/)).toBeVisible();
+    // 시군구 드롭다운으로 성동구(11200) 선택 → code URL 동기화
+    await page.getByLabel('시군구 선택').selectOption('11200');
+    await expect(page).toHaveURL(/code=11200/);
+    await expect(page.getByText(/성동구 중위 매매가/)).toBeVisible();
+    await expect(page.locator('svg[viewBox="0 0 760 300"] path')).toHaveCount(2, { timeout: 8000 });
+  });
+
+  test('NAT1 · 전국 온디맨드 — 비수도권 시군구 선택 시 데이터 수집/표시', async ({ page }) => {
+    test.setTimeout(90000); // 최초 수집(국토부 호출) 여유
+    await page.goto('/prices?code=26350'); // 부산 해운대구
+    // 이미 수집됐으면 바로 KPI, 아니면 수집 게이트 후 refresh
+    await expect(page.getByText(/해운대구 (중위 매매가|실거래 데이터를 불러오는 중)/)).toBeVisible();
+    await expect(page.getByText(/해운대구 중위 매매가/)).toBeVisible({ timeout: 80000 });
+    await expect(page.getByText(/해운대구 시세 추이/)).toBeVisible();
   });
 
   test('WK1 · 시세 추이 월간/주간 토글 → 주간 차트 렌더', async ({ page }) => {
-    await page.goto('/prices?region=강남구');
+    await page.goto('/prices?code=11680');
     await expect(page.getByText(/강남구 시세 추이/)).toBeVisible();
     const weekBtn = page.getByRole('button', { name: '주간', exact: true });
     await expect(async () => {
@@ -88,7 +93,7 @@ test.describe('시세 / 지도', () => {
   });
 
   test('GAP1 · 시세 화면에 갭 투자 분석(전세가율) 표시', async ({ page }) => {
-    await page.goto('/prices?region=강남구');
+    await page.goto('/prices?code=11680');
     await expect(page.getByText('갭 투자 분석')).toBeVisible();
     await expect(page.getByRole('table')).toBeVisible();
     await expect(page.getByText('전세가율 높은 순', { exact: false })).toBeVisible();
@@ -107,9 +112,9 @@ test.describe('시세 / 지도', () => {
     await expect(third).toHaveAttribute('aria-pressed', 'true');
   });
 
-  test('T76 · 지도 "상세 시세 분석 →" → /prices?region', async ({ page }) => {
+  test('T76 · 지도 "상세 시세 분석 →" → /prices?code', async ({ page }) => {
     await page.goto('/map');
     await page.getByRole('link', { name: /상세 시세 분석/ }).click();
-    await expect(page).toHaveURL(/\/prices\?region=/);
+    await expect(page).toHaveURL(/\/prices\?code=/);
   });
 });
