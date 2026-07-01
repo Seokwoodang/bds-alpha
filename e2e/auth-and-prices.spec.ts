@@ -99,17 +99,18 @@ test.describe('시세 / 지도', () => {
     await expect(page.getByText('전세가율 높은 순', { exact: false })).toBeVisible();
   });
 
-  test('CMP1 · 지역비교 — 지역 선택 시 비교표(전세가율·갭) 렌더', async ({ page }) => {
+  test('CMP1 · 지역비교 — 전국 시군구 비교표(전세가율·갭) 렌더', async ({ page }) => {
     await page.goto('/compare');
     await expect(page.getByRole('heading', { name: '지역 비교' })).toBeVisible();
-    // 기본 2개 지역 선택 상태로 비교표가 렌더됨
+    // 기본 강남·서초 로드 → 비교표
     await expect(page.getByRole('table')).toBeVisible();
     await expect(page.getByRole('cell', { name: '전세가율' })).toBeVisible();
     await expect(page.getByRole('cell', { name: '갭(매매−전세)' })).toBeVisible();
-    // 3번째 지역 추가 → 컬럼 증가
-    const third = page.getByRole('button', { name: '마포구', exact: true });
-    await third.click();
-    await expect(third).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('columnheader', { name: /강남구/ })).toBeVisible({ timeout: 20000 });
+    // 시군구 드롭다운으로 송파구(11710, 캐시됨) 추가 → 컬럼 증가
+    await page.getByLabel('시군구 선택').selectOption('11710');
+    await page.getByRole('button', { name: '+ 추가' }).click();
+    await expect(page.getByRole('columnheader', { name: /송파구/ })).toBeVisible({ timeout: 20000 });
   });
 
   test('T76 · 지도 "상세 시세 분석 →" → /prices?code', async ({ page }) => {

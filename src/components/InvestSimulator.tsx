@@ -4,18 +4,19 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { canAfford, type InvestMode } from '@/lib/invest';
-import { acquisitionTax, isAdjustedRegion } from '@/lib/tax';
+import { acquisitionTax, isAdjustedRegion, isAdjustedCode } from '@/lib/tax';
 import { saveProfile } from '@/lib/queries/profile';
 import type { InvestProfile } from '@/lib/queries/profileRead';
-import type { RegionGap } from '@/lib/queries/regions';
+import { CODE_TO_SIGUNGU } from '@/lib/regions-kr';
 
 interface ListingRow { id: number; title: string; region: string; dong: string | null; price_text: string; price_num: number; area: number }
+interface GapRow { code: string; region: string; sido: string; sale_eok: number; jeonse_eok: number; gap_eok: number; jeonse_ratio: number }
 
 const field: React.CSSProperties = { width: '100%', border: '1px solid var(--line)', borderRadius: 10, padding: '11px 13px', fontFamily: 'inherit', fontSize: 15, color: 'var(--ink)', outline: 'none' };
 const e = (n: number) => `${n.toFixed(1)}억`;
 
 export function InvestSimulator({ initial, loggedIn }: { initial?: InvestProfile | null; loggedIn: boolean }) {
-  const [gaps, setGaps] = useState<RegionGap[]>([]);
+  const [gaps, setGaps] = useState<GapRow[]>([]);
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   // 빈 입력을 허용(placeholder 노출)하기 위해 number | '' 로 관리. 초기값 없으면 빈 값.
@@ -48,10 +49,16 @@ export function InvestSimulator({ initial, loggedIn }: { initial?: InvestProfile
   useEffect(() => {
     const supabase = createClient();
     Promise.all([
-      supabase.rpc('region_gap'),
+      supabase.rpc('region_gap_all'),
       supabase.from('listings').select('id,title,region,dong,price_text,price_num,area').order('price_num', { ascending: true }),
     ]).then(([g, l]) => {
-      setGaps(((g.data as RegionGap[]) ?? []).map((d) => ({ region: d.region, sale_eok: Number(d.sale_eok), jeonse_eok: Number(d.jeonse_eok), gap_eok: Number(d.gap_eok), jeonse_ratio: Number(d.jeonse_ratio) })));
+      const rows = ((g.data as { lawd_cd: string; sale_eok: number; jeonse_eok: number; gap_eok: number; jeonse_ratio: number }[]) ?? [])
+        .map((d) => {
+          const sgg = CODE_TO_SIGUNGU[d.lawd_cd];
+          return sgg ? { code: d.lawd_cd, region: sgg.name, sido: sgg.sido, sale_eok: Number(d.sale_eok), jeonse_eok: Number(d.jeonse_eok), gap_eok: Number(d.gap_eok), jeonse_ratio: Number(d.jeonse_ratio) } : null;
+        })
+        .filter(Boolean) as GapRow[];
+      setGaps(rows);
       setListings(((l.data as ListingRow[]) ?? []).map((d) => ({ ...d, price_num: Number(d.price_num), area: Number(d.area) })));
       setLoaded(true);
     });
@@ -61,7 +68,7 @@ export function InvestSimulator({ initial, loggedIn }: { initial?: InvestProfile
   const budget = mode === 'gap' ? cap + ln : cap;
 
   const regionRecs = useMemo(() => gaps
-    .map((g) => { const tax = acquisitionTax(g.sale_eok, 84, own + 1, isAdjustedRegion(g.region), { firstTime: own === 0 && firstTime }); return { g, tax, r: canAfford(mode, g.sale_eok, g.jeonse_eok, cap, ln, tax.total) }; })
+    .map((g) => { const tax = acquisitionTax(g.sale_eok, 84, own + 1, isAdjustedCode(g.code), { firstTime: own === 0 && firstTime }); return { g, tax, r: canAfford(mode, g.sale_eok, g.jeonse_eok, cap, ln, tax.total) }; })
     .filter((x) => x.r.afford)
     .sort((a, b) => mode === 'gap' ? b.g.jeonse_ratio - a.g.jeonse_ratio : a.r.need - b.r.need),
     [gaps, mode, cap, ln, own, firstTime]);
@@ -130,8 +137,9 @@ export function InvestSimulator({ initial, loggedIn }: { initial?: InvestProfile
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 16, marginBottom: 32 }}>
               {regionRecs.map(({ g, tax, r }) => (
-                <Link key={g.region} href={`/listings?region=${encodeURIComponent(g.region)}`} className="bds-card" style={{ display: 'block', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 18 }}>
-                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--navy)', marginBottom: 8 }}>{g.region}{isAdjustedRegion(g.region) && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--down)', background: '#FCE9EA', padding: '1px 6px', borderRadius: 5, marginLeft: 6 }}>조정</span>}</div>
+                <Link key={g.code} href={`/prices?code=${g.code}`} className="bds-card" style={{ display: 'block', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 18 }}>
+                  <div style={{ fontSize: 11, color: '#8499B3', fontWeight: 600, marginBottom: 2 }}>{g.sido}</div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--navy)', marginBottom: 8 }}>{g.region}{isAdjustedCode(g.code) && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--down)', background: '#FCE9EA', padding: '1px 6px', borderRadius: 5, marginLeft: 6 }}>조정</span>}</div>
                   <div style={{ fontSize: 13, color: '#7286A0', marginBottom: 2 }}>매매 {e(g.sale_eok)} · 전세 {e(g.jeonse_eok)}</div>
                   {mode === 'gap' && <div style={{ fontSize: 13, color: '#7286A0', marginBottom: 8 }}>갭 {e(g.gap_eok)} · 전세가율 <strong style={{ color: g.jeonse_ratio >= 45 ? 'var(--up)' : 'var(--ink)' }}>{g.jeonse_ratio}%</strong></div>}
                   <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 10, marginTop: 8 }}>

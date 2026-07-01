@@ -7,6 +7,12 @@ export function isAdjustedRegion(region: string): boolean {
   return ADJUSTED_REGIONS.has(region);
 }
 
+// 조정대상지역 LAWD 코드(강남·서초·송파·용산). 전국 코드 기반 판정용.
+export const ADJUSTED_CODES = new Set(['11680', '11650', '11710', '11170']);
+export function isAdjustedCode(code: string): boolean {
+  return ADJUSTED_CODES.has(code);
+}
+
 /** 일반세율(%) — 가격 구간. 6~9억은 1~3% 슬라이딩. */
 export function baseRate(priceEok: number): number {
   if (priceEok <= 6) return 1;

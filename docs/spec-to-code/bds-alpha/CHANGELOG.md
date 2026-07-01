@@ -1,5 +1,16 @@
 # Change Log — 부동산알파 (bds-alpha)
 
+## 2026-07-01 · update v12 — done — 전국화 확장(지역비교·투자추천·cron)
+### 추가
+- **지역비교(/compare) 전국화**: 8개 구 칩 → 시/도→시군구 선택 + 미수집 지역 온디맨드 수집(`RegionCompare` 재작성). 코드 기반 summary/gap.
+- **투자추천(/invest) 전국화**: `region_gap_all()` RPC(캐시된 전 시군구 갭)로 지역 추천. 조정지역 코드 판정(`isAdjustedCode`), 시도명 표기, 카드→`/prices?code=`.
+- **신선도**: cron 주간→**매일**, `refresh-cached.mjs`로 온디맨드 수집된 전 시군구 최근 3개월 자동 재수집.
+### 검증
+- region_gap_all 10개 지역(기존 8+해운대+수성) · vitest 120 · e2e 44 pass/1 skip(CMP1 전국·INV code 전환).
+### 남은 것(후속)
+- /map(전국 지오맵)·매물목록/검색 전국화(개별 raw)는 규모가 커서 별도. Vercel 함수 타임아웃 시 수집 청크화.
+
+
 ## 2026-07-01 · update v11 — done — 전국 시세(온디맨드 하이브리드)
 ### 배경
 - 기존: 서울 8개 구만 사전수집. "전국 안 나옴"·"실시간 아님" 지적 → 전국 확장.

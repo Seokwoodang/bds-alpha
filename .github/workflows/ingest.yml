@@ -1,9 +1,9 @@
 name: 실거래 수집 (ingest)
 
-# 매주 월요일 03:00 KST(=일 18:00 UTC) 자동 + 수동 실행
+# 매일 03:00 KST(=18:00 UTC) 자동 + 수동 실행 (온디맨드 전국 모델: 캐시된 지역 매일 갱신)
 on:
   schedule:
-    - cron: '0 18 * * 0'
+    - cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
       start:
@@ -28,8 +28,11 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
-      # 기본: 최근 2개월만 갱신(빠름). 수동 실행 시 start/end 지정 가능.
-      - name: 매매 수집
+      # 기본 8개 구(항상 유지) 최근 3개월 갱신
+      - name: 기본 지역 매매 수집
         run: node scripts/ingest-transactions.mjs "${{ github.event.inputs.start || '' }}" "${{ github.event.inputs.end || '' }}"
-      - name: 전월세 수집
+      - name: 기본 지역 전월세 수집
         run: node scripts/ingest-rents.mjs "${{ github.event.inputs.start || '' }}" "${{ github.event.inputs.end || '' }}"
+      # 온디맨드로 수집된 전국 시군구도 최근 3개월 갱신(신선도 유지)
+      - name: 캐시 지역 갱신
+        run: node scripts/refresh-cached.mjs 3
