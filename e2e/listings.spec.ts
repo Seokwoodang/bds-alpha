@@ -7,6 +7,40 @@
  */
 import { test, expect } from '@playwright/test';
 
+test.describe('전국 실거래 매물', () => {
+  test('NL1 · 전국 개별 실거래 목록 + 검색', async ({ page }) => {
+    await page.goto('/listings?code=11680'); // 강남구(캐시됨)
+    await expect(page.getByRole('heading', { name: '전국 실거래 매물' })).toBeVisible();
+    await expect(page.getByText(/총 .*건/)).toBeVisible({ timeout: 20000 });
+    // 카드 최소 1개
+    await expect(page.locator('a[href^="/listings/tx/"]').first()).toBeVisible();
+  });
+
+  test('NL2 · 매물 카드 → 상세(실거래 정보 + 취득세)', async ({ page }) => {
+    await page.goto('/listings?code=11680');
+    await page.locator('a[href^="/listings/tx/"]').first().click();
+    await expect(page).toHaveURL(/\/listings\/tx\/\d+/);
+    await expect(page.getByText('실거래 정보')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '취득세 계산' })).toBeVisible();
+  });
+
+  test('NL3 · 로그인 후 상세에서 관심 저장 → 마이페이지 노출', async ({ page }) => {
+    await page.goto('/login?returnTo=%2Flistings%3Fcode%3D11680');
+    await page.getByLabel('이메일').fill('e2e@bds.test');
+    await page.getByLabel('비밀번호').fill('Test1234!');
+    await page.locator('form').getByRole('button', { name: '로그인' }).click();
+    await page.waitForURL('**/listings**');
+    await page.locator('a[href^="/listings/tx/"]').first().click();
+    await expect(page).toHaveURL(/\/listings\/tx\/\d+/);
+    const heart = page.getByRole('button', { name: '관심 매물 저장' });
+    await heart.click();
+    await expect(heart).toHaveAttribute('aria-pressed', 'true');
+    await page.waitForTimeout(1500); // 서버 액션(저장) 반영 대기
+    await page.goto('/mypage');
+    await expect(page.getByRole('heading', { name: /관심 실거래/ })).toBeVisible();
+  });
+});
+
 test.describe('매물 목록', () => {
   test('T58 · 필터 변경이 URL 쿼리에 반영', async ({ page }) => {
     await page.goto('/listings');

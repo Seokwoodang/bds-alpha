@@ -9,5 +9,6 @@ await c.connect();
 const uid="(select id from auth.users where email='e2e@bds.test')";
 const r=await c.query(`delete from public.saved_listings where user_id=${uid}`);
 const p=await c.query(`delete from public.properties where user_id=${uid}`);
-console.log('cleared saved:', r.rowCount, 'properties:', p.rowCount);
+const t=await c.query(`delete from public.saved_transactions where user_id=${uid}`);
+console.log('cleared saved:', r.rowCount, 'properties:', p.rowCount, 'saved_tx:', t.rowCount);
 await c.end();

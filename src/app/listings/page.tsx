@@ -1,10 +1,15 @@
 import { parseListingParams } from '@/lib/listingsQuery';
 import { getListings } from '@/lib/queries/listings';
 import { getSaved } from '@/lib/queries/savedRead';
+import { getSavedTxIds } from '@/lib/queries/savedTxRead';
+import { createClient } from '@/lib/supabase/server';
 import { ListingCard } from '@/components/ListingCard';
 import { FilterPanel } from '@/components/FilterPanel';
 import { SortSelect } from '@/components/SortSelect';
 import { EmptyState } from '@/components/EmptyState';
+import { RegionPicker } from '@/components/RegionPicker';
+import { NationwideListings } from '@/components/NationwideListings';
+import { CODE_TO_SIGUNGU } from '@/lib/regions-kr';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +17,25 @@ const GRID: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repea
 
 export default async function ListingsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
+  const codeRaw = Array.isArray(sp.code) ? sp.code[0] : sp.code;
+  const code = codeRaw && CODE_TO_SIGUNGU[codeRaw] ? codeRaw : null;
+
+  // 전국 개별 실거래 모드
+  if (code) {
+    const sgg = CODE_TO_SIGUNGU[code];
+    const supabase = await createClient();
+    const [{ data: { user } }, savedTxIds] = await Promise.all([supabase.auth.getUser(), getSavedTxIds()]);
+    return (
+      <div className="bds-fade" style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px 64px' }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--navy)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>전국 실거래 매물</h1>
+        <p style={{ fontSize: 15, color: '#7286A0', margin: '0 0 24px' }}>전국 시군구의 개별 실거래(매매)를 검색·정렬하고 관심 저장하세요. (국토교통부 실거래가)</p>
+        <RegionPicker code={code} basePath="/listings" />
+        <NationwideListings code={code} region={sgg.name} sido={sgg.sido} loggedIn={!!user} savedIds={savedTxIds} />
+      </div>
+    );
+  }
+
+  // 큐레이션(추천) 매물 모드
   const usp = new URLSearchParams(
     Object.entries(sp).flatMap(([k, v]) => (v == null ? [] : [[k, Array.isArray(v) ? v[0] : v]] as [string, string][])),
   );
@@ -24,7 +48,12 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
   return (
     <div className="bds-fade" style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px 64px' }}>
       <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--navy)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>매물 찾기</h1>
-      <p style={{ fontSize: 15, color: '#7286A0', margin: '0 0 24px' }}>조건에 맞는 투자 매물을 검색하고 비교하세요.</p>
+      <p style={{ fontSize: 15, color: '#7286A0', margin: '0 0 16px' }}>추천 매물을 검색하거나, 전국 시군구의 개별 실거래를 살펴보세요.</p>
+
+      <div style={{ background: 'var(--primary-soft)', border: '1px solid var(--line)', borderRadius: 14, padding: '14px 18px', marginBottom: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)', marginBottom: 8 }}>🌏 전국 실거래 매물 보기</div>
+        <RegionPicker code="11680" basePath="/listings" />
+      </div>
 
       <FilterPanel spec={spec} />
 

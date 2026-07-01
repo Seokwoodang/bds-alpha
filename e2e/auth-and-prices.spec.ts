@@ -95,7 +95,7 @@ test.describe('시세 / 지도', () => {
   test('GAP1 · 시세 화면에 갭 투자 분석(전세가율) 표시', async ({ page }) => {
     await page.goto('/prices?code=11680');
     await expect(page.getByText('갭 투자 분석')).toBeVisible();
-    await expect(page.getByRole('table')).toBeVisible();
+    // 갭 분석은 div[role=table]. (실거래 <table>과 구분하기 위해 랭킹 문구로 확인)
     await expect(page.getByText('전세가율 높은 순', { exact: false })).toBeVisible();
   });
 
