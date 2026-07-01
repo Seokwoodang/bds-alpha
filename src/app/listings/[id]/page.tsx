@@ -8,6 +8,7 @@ import { LISTING_COVER } from '@/lib/cover';
 import { ListingCard } from '@/components/ListingCard';
 import { HeartButton } from '@/components/HeartButton';
 import { RegistryLink } from '@/components/RegistryLink';
+import { MapLink } from '@/components/MapLink';
 import { BackLink } from '@/components/BackLink';
 
 // force-dynamic을 두지 않음: 쿠키(Supabase 세션) 사용으로 어차피 동적이며,
@@ -37,8 +38,9 @@ export default async function DetailPage({ params }: { params: Promise<{ id: str
       <BackLink />
       <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 520px', minWidth: 300 }}>
-          <div style={{ position: 'relative', height: 360, borderRadius: 18, background: LISTING_COVER, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--line)', marginBottom: 14 }}>
-            <span style={{ fontFamily: 'ui-monospace,Menlo,monospace', fontSize: 13, color: '#9FB1C9' }}>[ 매물 대표 사진 ]</span>
+          <div style={{ position: 'relative', height: 360, borderRadius: 18, background: LISTING_COVER, display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center', justifyContent: 'center', border: '1px solid var(--line)', marginBottom: 14 }}>
+            <span style={{ fontSize: 52, opacity: 0.5 }}>🏢</span>
+            <MapLink query={`${listing.region} ${listing.dong} ${listing.title}`} variant="cover" />
             <span style={{ position: 'absolute', top: 16, left: 16, background: badge.bg, color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 6 }}>{listing.deal}</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 28 }}>
@@ -94,6 +96,7 @@ export default async function DetailPage({ params }: { params: Promise<{ id: str
             </div>
             <button disabled aria-label="상담 신청하기 (준비 중)" style={{ width: '100%', background: 'var(--primary)', border: 'none', borderRadius: 12, padding: 15, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'not-allowed', opacity: 0.55, marginBottom: 10, fontFamily: 'inherit' }}>상담 신청하기 (준비 중)</button>
             <HeartButton listingId={listing.id} isSaved={savedSet.has(listing.id)} returnTo={returnTo} variant="detail" />
+            <MapLink query={`${listing.region} ${listing.dong} ${listing.title}`} />
             <RegistryLink address={`${listing.region} ${listing.dong} ${listing.title}`} />
           </div>
         </div>

@@ -8,6 +8,7 @@ import { CODE_TO_SIGUNGU } from '@/lib/regions-kr';
 import { TaxEstimate } from '@/components/TaxEstimate';
 import { HeartTxButton } from '@/components/HeartTxButton';
 import { RegistryLink } from '@/components/RegistryLink';
+import { MapLink } from '@/components/MapLink';
 import { BackLink } from '@/components/BackLink';
 
 export const dynamic = 'force-dynamic';
@@ -71,6 +72,7 @@ export default async function TxDetailPage({ params }: { params: Promise<{ id: s
             <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--navy)', letterSpacing: '-0.03em', marginBottom: 20 }}>{formatPriceManwon(priceManwon)}</div>
             <div style={{ fontSize: 13, color: '#7286A0', marginBottom: 18 }}>전용 {area}㎡ · {tx.floor ?? '—'}층 · {tx.deal_date}</div>
             <HeartTxButton txId={id} isSaved={isSaved} returnTo={returnTo} variant="detail" />
+            <MapLink query={`${sido} ${tx.region} ${tx.dong ?? ''} ${tx.apt_name ?? ''}`} />
             <RegistryLink address={`${sido} ${tx.region} ${tx.apt_name ?? ''}`.trim()} />
           </div>
         </div>

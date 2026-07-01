@@ -22,6 +22,10 @@ test.describe('전국 실거래 매물', () => {
     await expect(page).toHaveURL(/\/listings\/tx\/\d+/);
     await expect(page.getByText('실거래 정보')).toBeVisible();
     await expect(page.getByRole('heading', { name: '취득세 계산' })).toBeVisible();
+    // 로드뷰(네이버 지도) 링크 — 실제 건물 확인용
+    const rv = page.getByRole('link', { name: /네이버 지도·로드뷰/ });
+    await expect(rv).toHaveAttribute('href', /map\.naver\.com/);
+    await expect(rv).toHaveAttribute('target', '_blank');
   });
 
   test('NL3 · 로그인 후 상세에서 관심 저장 → 마이페이지 노출', async ({ page }) => {

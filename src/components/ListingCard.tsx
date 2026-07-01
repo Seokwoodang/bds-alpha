@@ -3,6 +3,7 @@ import type { Listing } from '@/lib/types';
 import { roiText, dealBadge, areaText } from '@/lib/format';
 import { LISTING_COVER } from '@/lib/cover';
 import { HeartButton } from '@/components/HeartButton';
+import { MapLink } from '@/components/MapLink';
 
 export function ListingCard({ listing, isSaved, returnTo }: { listing: Listing; isSaved: boolean; returnTo: string }) {
   const badge = dealBadge(listing.deal);
@@ -14,7 +15,7 @@ export function ListingCard({ listing, isSaved, returnTo }: { listing: Listing; 
         style={{ display: 'flex', flexDirection: 'column', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, overflow: 'hidden', width: '100%' }}
       >
         <div style={{ position: 'relative', height: 168, background: LISTING_COVER, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontFamily: 'ui-monospace,Menlo,monospace', fontSize: 12, color: '#9FB1C9' }}>[ 매물 사진 ]</span>
+          <span style={{ fontSize: 34, opacity: 0.5 }}>🏢</span>
           <span style={{ position: 'absolute', top: 12, left: 12, background: badge.bg, color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 6 }}>{listing.deal}</span>
         </div>
         <div style={{ padding: '16px 17px 18px', flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -36,6 +37,11 @@ export function ListingCard({ listing, isSaved, returnTo }: { listing: Listing; 
         </div>
       </Link>
       <HeartButton listingId={listing.id} isSaved={isSaved} returnTo={returnTo} />
+      <div style={{ position: 'absolute', top: 96, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 2, pointerEvents: 'none' }}>
+        <div style={{ pointerEvents: 'auto' }}>
+          <MapLink query={`${listing.region} ${listing.dong} ${listing.title}`} variant="cover" />
+        </div>
+      </div>
     </article>
   );
 }
