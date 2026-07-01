@@ -18,17 +18,31 @@ export function InvestSimulator({ initial, loggedIn }: { initial?: InvestProfile
   const [gaps, setGaps] = useState<RegionGap[]>([]);
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [capital, setCapital] = useState(initial?.capital ?? 5);
-  const [loan, setLoan] = useState(initial?.loan ?? 3);
-  const [owned, setOwned] = useState(initial?.owned ?? 0); // 현재 보유 주택 수
+  // 빈 입력을 허용(placeholder 노출)하기 위해 number | '' 로 관리. 초기값 없으면 빈 값.
+  const [capital, setCapital] = useState<number | ''>(initial?.capital ?? '');
+  const [loan, setLoan] = useState<number | ''>(initial?.loan ?? '');
+  const [owned, setOwned] = useState<number | ''>(initial?.owned ?? ''); // 현재 보유 주택 수
   const [firstTime, setFirstTime] = useState(initial?.firstTime ?? false); // 생애최초(무주택)
   const [mode, setMode] = useState<InvestMode>(initial?.mode ?? 'gap');
   const [saving, startSave] = useTransition();
   const [saved, setSaved] = useState(false);
 
+  // 계산용 숫자(빈 값은 0으로 취급)
+  const cap = capital === '' ? 0 : capital;
+  const ln = loan === '' ? 0 : loan;
+  const own = owned === '' ? 0 : owned;
+
+  // 숫자 입력 onChange: 빈 문자열은 그대로 두고, 값이 있으면 하한 적용
+  const numChange = (set: (v: number | '') => void, floor = false) => (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = ev.target.value;
+    if (raw === '') { set(''); return; }
+    const n = Math.max(0, Number(raw));
+    set(floor ? Math.floor(n) : n);
+  };
+
   function onSave() {
     setSaved(false);
-    startSave(async () => { await saveProfile({ capital, loan, owned, firstTime, mode }); setSaved(true); });
+    startSave(async () => { await saveProfile({ capital: cap, loan: ln, owned: own, firstTime, mode }); setSaved(true); });
   }
 
   useEffect(() => {
@@ -44,20 +58,20 @@ export function InvestSimulator({ initial, loggedIn }: { initial?: InvestProfile
   }, []);
 
   const jeonseByRegion = useMemo(() => Object.fromEntries(gaps.map((g) => [g.region, g.jeonse_eok])), [gaps]);
-  const budget = mode === 'gap' ? capital + loan : capital;
+  const budget = mode === 'gap' ? cap + ln : cap;
 
   const regionRecs = useMemo(() => gaps
-    .map((g) => { const tax = acquisitionTax(g.sale_eok, 84, owned + 1, isAdjustedRegion(g.region), { firstTime: owned === 0 && firstTime }); return { g, tax, r: canAfford(mode, g.sale_eok, g.jeonse_eok, capital, loan, tax.total) }; })
+    .map((g) => { const tax = acquisitionTax(g.sale_eok, 84, own + 1, isAdjustedRegion(g.region), { firstTime: own === 0 && firstTime }); return { g, tax, r: canAfford(mode, g.sale_eok, g.jeonse_eok, cap, ln, tax.total) }; })
     .filter((x) => x.r.afford)
     .sort((a, b) => mode === 'gap' ? b.g.jeonse_ratio - a.g.jeonse_ratio : a.r.need - b.r.need),
-    [gaps, mode, capital, loan, owned, firstTime]);
+    [gaps, mode, cap, ln, own, firstTime]);
 
   const listingRecs = useMemo(() => listings
-    .map((l) => { const sale = l.price_num / 10000; const jeonse = jeonseByRegion[l.region] ?? 0; const tax = acquisitionTax(sale, l.area, owned + 1, isAdjustedRegion(l.region), { firstTime: owned === 0 && firstTime }); return { l, sale, tax, r: canAfford(mode, sale, jeonse, capital, loan, tax.total) }; })
+    .map((l) => { const sale = l.price_num / 10000; const jeonse = jeonseByRegion[l.region] ?? 0; const tax = acquisitionTax(sale, l.area, own + 1, isAdjustedRegion(l.region), { firstTime: own === 0 && firstTime }); return { l, sale, tax, r: canAfford(mode, sale, jeonse, cap, ln, tax.total) }; })
     .filter((x) => x.r.afford)
     .sort((a, b) => a.r.need - b.r.need)
     .slice(0, 12),
-    [listings, jeonseByRegion, mode, capital, loan, owned, firstTime]);
+    [listings, jeonseByRegion, mode, cap, ln, own, firstTime]);
 
   return (
     <div>
@@ -71,27 +85,27 @@ export function InvestSimulator({ initial, loggedIn }: { initial?: InvestProfile
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 16 }}>
           <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}>보유 자본 (억)
-            <input type="number" step="0.5" min="0" value={capital} onChange={(ev) => setCapital(Math.max(0, Number(ev.target.value)))} aria-label="보유 자본" style={{ ...field, marginTop: 6 }} />
+            <input type="number" step="0.5" min="0" value={capital} onChange={numChange(setCapital)} placeholder="예: 5" aria-label="보유 자본" style={{ ...field, marginTop: 6 }} />
           </label>
           <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}>대출 가능액 (억)
-            <input type="number" step="0.5" min="0" value={loan} onChange={(ev) => setLoan(Math.max(0, Number(ev.target.value)))} aria-label="대출 가능액" style={{ ...field, marginTop: 6 }} />
+            <input type="number" step="0.5" min="0" value={loan} onChange={numChange(setLoan)} placeholder="예: 3" aria-label="대출 가능액" style={{ ...field, marginTop: 6 }} />
           </label>
           <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}>현재 보유 주택 수
-            <input type="number" step="1" min="0" value={owned} onChange={(ev) => setOwned(Math.max(0, Math.floor(Number(ev.target.value))))} aria-label="현재 보유 주택 수" style={{ ...field, marginTop: 6 }} />
+            <input type="number" step="1" min="0" value={owned} onChange={numChange(setOwned, true)} placeholder="0" aria-label="현재 보유 주택 수" style={{ ...field, marginTop: 6 }} />
           </label>
           <div style={{ alignSelf: 'end' }}>
             <div style={{ fontSize: 13, color: '#8499B3', fontWeight: 600, marginBottom: 6 }}>{mode === 'gap' ? '가용 예산(자본+대출)' : '자기자본'}</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--primary)' }}>{e(budget)}</div>
           </div>
         </div>
-        {owned === 0 && (
+        {own === 0 && (
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink)', marginTop: 14, cursor: 'pointer' }}>
             <input type="checkbox" checked={firstTime} onChange={(ev) => setFirstTime(ev.target.checked)} />
             생애최초 구입 (취득세 최대 200만원 감면 반영)
           </label>
         )}
         <div style={{ fontSize: 12, color: 'var(--muted-2)', marginTop: 12 }}>
-          {mode === 'gap' ? '갭투자: 필요자본 = (매매−전세) + 취득세. 전세보증금이 매매대금 레버리지.' : '실거주: 필요자본 = 매매 + 취득세 − 대출.'} 취득세는 <strong>취득 후 {owned + 1}주택</strong> 기준 + 조정대상지역(강남·서초·송파·용산) 중과 + 85㎡초과 농특세를 반영(간이). 실거래 중위가 기준.
+          {mode === 'gap' ? '갭투자: 필요자본 = (매매−전세) + 취득세. 전세보증금이 매매대금 레버리지.' : '실거주: 필요자본 = 매매 + 취득세 − 대출.'} 취득세는 <strong>취득 후 {own + 1}주택</strong> 기준 + 조정대상지역(강남·서초·송파·용산) 중과 + 85㎡초과 농특세를 반영(간이). 실거래 중위가 기준.
         </div>
         <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
           {loggedIn ? (

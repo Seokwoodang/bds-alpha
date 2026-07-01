@@ -74,6 +74,19 @@ test.describe('시세 / 지도', () => {
     await expect(page.locator('svg[viewBox="0 0 760 300"] path')).toHaveCount(2, { timeout: 5000 });
   });
 
+  test('WK1 · 시세 추이 월간/주간 토글 → 주간 차트 렌더', async ({ page }) => {
+    await page.goto('/prices?region=강남구');
+    await expect(page.getByText(/강남구 시세 추이/)).toBeVisible();
+    const weekBtn = page.getByRole('button', { name: '주간', exact: true });
+    await expect(async () => {
+      await weekBtn.click();
+      await expect(page.getByRole('button', { name: '주간', pressed: true })).toBeVisible({ timeout: 1500 });
+    }).toPass({ timeout: 15000 });
+    await expect(page.getByText(/최근 26주/)).toBeVisible();
+    // 차트 path 2개(area+line) 렌더
+    await expect(page.locator('svg[viewBox="0 0 760 300"] path')).toHaveCount(2, { timeout: 8000 });
+  });
+
   test('GAP1 · 시세 화면에 갭 투자 분석(전세가율) 표시', async ({ page }) => {
     await page.goto('/prices?region=강남구');
     await expect(page.getByText('갭 투자 분석')).toBeVisible();

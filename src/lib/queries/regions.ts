@@ -30,6 +30,14 @@ export async function getRegionSeries(region: string): Promise<{ label: string; 
   return ((data as { label: string; price_eok: number }[]) ?? []).map((d) => ({ label: d.label, value: Number(d.price_eok) }));
 }
 
+/** 지역 최근 26주 주간 중위 시세 시계열(억, 4주 이동평균). */
+export async function getRegionSeriesWeekly(region: string): Promise<{ label: string; value: number }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('region_series_weekly', { p_region: region });
+  if (error) throw error;
+  return ((data as { label: string; price_eok: number }[]) ?? []).map((d) => ({ label: d.label, value: Number(d.price_eok) }));
+}
+
 export interface RegionGap { region: string; sale_eok: number; jeonse_eok: number; gap_eok: number; jeonse_ratio: number }
 
 /** 지역별 갭(매매-전세)·전세가율(대표평형 60~85㎡, 최근 3개월 중위). */

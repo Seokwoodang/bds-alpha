@@ -1,6 +1,6 @@
 import { getRegions, getRegionSeries } from '@/lib/queries/regions';
-import { buildSeriesChart, kpiRules } from '@/lib/chart';
-import { PriceChart } from '@/components/PriceChart';
+import { kpiRules } from '@/lib/chart';
+import { PriceTrend } from '@/components/PriceTrend';
 import { RegionTabs, RegionBars } from '@/components/RegionSelector';
 import { GapAnalysis } from '@/components/GapAnalysis';
 
@@ -11,7 +11,6 @@ export default async function PricesPage({ searchParams }: { searchParams: Promi
   const regions = await getRegions();
   const selected = regions.find((r) => r.name === region) ?? regions[0];
   const series = await getRegionSeries(selected.name);
-  const chart = buildSeriesChart(series.map((s) => s.value), series.map((s) => s.label));
   const kpis = kpiRules(selected);
 
   return (
@@ -34,11 +33,7 @@ export default async function PricesPage({ searchParams }: { searchParams: Promi
         ))}
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 18, padding: 24, marginBottom: 24 }}>
-        <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--navy)', marginBottom: 4 }}>{`${selected.name} 시세 추이`}</div>
-        <div style={{ fontSize: 13, color: '#8499B3', marginBottom: 16 }}>최근 13개월 · 국토부 실거래 중위가(억) · 월별</div>
-        <PriceChart data={chart} />
-      </div>
+      <PriceTrend region={selected.name} initialMonthly={series} />
 
       <RegionBars regions={regions} selected={selected.name} />
 
