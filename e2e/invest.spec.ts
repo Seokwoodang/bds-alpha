@@ -31,6 +31,22 @@ test('INV2 · 갭/실거주 토글 + 예산 작으면 추천 줄어듦', async (
   await expect(page.getByText(/진입 가능한 지역이 없|예산으로 진입/)).toBeVisible();
 });
 
+test('LOAN1 · 대출 한도 계산기 — 규제지역 다주택 금지 + 비수도권 LTV 산출', async ({ page }) => {
+  await page.goto('/invest');
+  await expect(page.getByRole('heading', { name: /내 대출 한도 계산/ })).toBeVisible();
+  // 기본(수도권 8억 무주택) → 최대 한도 표시
+  await expect(page.getByText('최대 대출 한도 (LTV·DSR 중 작은 값)')).toBeVisible();
+  // 규제지역 + 다주택 2 → 금지 안내
+  await page.getByLabel('지역 구분').selectOption('규제');
+  await page.getByLabel('보유 주택 수', { exact: true }).fill('2');
+  await expect(page.getByText(/주택담보대출이 불가/)).toBeVisible();
+  // 그 외 지방 무주택 5억 → LTV 70%=3.5억이 담보 한도로 표시
+  await page.getByLabel('보유 주택 수', { exact: true }).fill('0');
+  await page.getByLabel('지역 구분').selectOption('기타');
+  await page.getByLabel('집값').fill('5');
+  await expect(page.getByText(/담보\(LTV 70%\)/)).toBeVisible();
+});
+
 test('INV3 · 로그인 시 조건 저장 → 재방문 자동 채움', async ({ page }) => {
   await login(page);
   await page.getByLabel('보유 자본').fill('9');
