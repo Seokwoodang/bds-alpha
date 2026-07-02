@@ -28,6 +28,17 @@ test.describe('공통 셸 / 홈', () => {
     await expect(page.getByRole('img', { name: '전국 시군구 시세 지도' })).toBeVisible();
   });
 
+  test('HW1 · 홈 투자 위젯 — 자본 입력 → 즉시 지역 추천 + 스코어 랭킹 근거', async ({ page }) => {
+    await page.goto('/');
+    // 스코어 랭킹: 등급 배지 + 근거(전세가율/거래량) 노출
+    await expect(page.getByText(/유망|보통|주의/).first()).toBeVisible();
+    await expect(page.getByText(/전세가율 \d/).first()).toBeVisible();
+    // 미니 위젯: 입력 즉시 추천
+    await page.getByLabel('홈 보유 자본').fill('20');
+    await page.getByLabel('홈 대출 가능액').fill('10');
+    await expect(page.getByText(/필요자본 .*억/).first()).toBeVisible();
+  });
+
   test('T87 · 홈 검색 제출 → /listings?q=', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('매물 검색').fill('청담');
