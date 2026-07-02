@@ -6,7 +6,7 @@ import { formatPriceManwon } from '@/lib/property';
 import { CODE_TO_SIGUNGU } from '@/lib/regions-kr';
 import { KoreaChoropleth } from '@/components/KoreaChoropleth';
 import { HomeInvestWidget } from '@/components/HomeInvestWidget';
-import { HomeSearch } from '@/components/HomeSearch';
+import { RegionSearch } from '@/components/RegionSearch';
 import { HomeGuides } from '@/components/HomeGuides';
 
 export const dynamic = 'force-dynamic';
@@ -38,7 +38,7 @@ export default async function HomePage() {
               {basisDate && <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--muted-2)' }}>국토부 실거래 {basisDate} 신고분까지 · 매매 {meta.tx_count.toLocaleString('ko-KR')}건 · {meta.region_count}개 지역</span>}
             </p>
           </div>
-          <div style={{ flex: '0 1 380px', minWidth: 260 }}><HomeSearch /></div>
+          <div style={{ flex: '0 1 380px', minWidth: 260 }}><RegionSearch /></div>
         </div>
         <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'stretch' }}>
           <div style={{ flex: '1 1 560px', minWidth: 300, background: '#fff', border: '1px solid var(--line)', borderRadius: 18, padding: 20 }}>

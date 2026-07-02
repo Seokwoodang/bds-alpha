@@ -39,17 +39,21 @@ test.describe('공통 셸 / 홈', () => {
     await expect(page.getByText(/필요자본 .*억/).first()).toBeVisible();
   });
 
-  test('T87 · 홈 검색 제출 → /listings?q=', async ({ page }) => {
+  test('T87 · 홈 지역 검색 자동완성 → 선택 시 /prices?code=', async ({ page }) => {
     await page.goto('/');
-    await page.getByLabel('매물 검색').fill('청담');
-    await page.getByRole('button', { name: '검색' }).click();
-    await expect(page).toHaveURL(/\/listings\?q=/);
+    await page.getByLabel('지역 검색').fill('해운대');
+    await page.getByRole('option', { name: /해운대구/ }).click();
+    await expect(page).toHaveURL(/\/prices\?code=26350/);
   });
 
-  test('T88 · 빠른 지역 칩 → /listings?region=', async ({ page }) => {
+  test('T88 · 지역 검색 Enter → 첫 제안으로 이동, 미일치 안내', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: '마포구' }).click();
-    await expect(page).toHaveURL(/\/listings\?region=/);
+    const input = page.getByLabel('지역 검색');
+    await input.fill('없는지역명');
+    await expect(page.getByText('일치하는 지역이 없어요')).toBeVisible();
+    await input.fill('분당');
+    await input.press('Enter');
+    await expect(page).toHaveURL(/\/prices\?code=41135/);
   });
 
   test('T89 · 푸터 3컬럼 정적 링크', async ({ page }) => {
