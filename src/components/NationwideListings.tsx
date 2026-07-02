@@ -82,7 +82,7 @@ export function NationwideListings({ code, region, sido, loggedIn, savedIds }: {
               <div key={t.id} style={{ position: 'relative' }}>
                 {loggedIn && <HeartTxButton txId={t.id} isSaved={savedSet.has(t.id)} returnTo={returnTo} />}
                 <MapLink query={`${sido} ${region} ${t.dong ?? ''} ${t.apt_name ?? ''}`} variant="icon" />
-                <Link href={`/listings/tx/${t.id}`} className="bds-card" style={{ display: 'block', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: '52px 18px 18px' }}>
+                <Link prefetch={false} href={`/listings/tx/${t.id}`} className="bds-card" style={{ display: 'block', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: '52px 18px 18px' }}>
                   <div style={{ fontSize: 12, color: '#8499B3', fontWeight: 600, marginBottom: 4 }}>{sido} {region}{t.dong ? ` · ${t.dong}` : ''}</div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--navy)', marginBottom: 8, minHeight: 22 }}>{t.apt_name ?? '—'}</div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)', letterSpacing: '-0.02em', marginBottom: 6 }}>{formatPriceManwon(t.deal_amount)}</div>

@@ -36,7 +36,7 @@ export function NationwideExplorer() {
         {(BY_SIDO[sido] ?? []).map((s) => {
           const c = cache[s.code];
           return (
-            <Link key={s.code} href={`/prices?code=${s.code}`} className="bds-card"
+            <Link prefetch={false} key={s.code} href={`/prices?code=${s.code}`} className="bds-card"
               style={{ display: 'block', background: '#fff', border: '1px solid var(--line)', borderRadius: 12, padding: 14 }}>
               <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', marginBottom: 6 }}>{s.name}</div>
               {c ? (

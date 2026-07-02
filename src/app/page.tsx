@@ -60,7 +60,7 @@ export default async function HomePage() {
               const stat = statByCode.get(r.code);
               const badge = scoreBadge(r.score);
               return (
-                <Link key={r.code} href={`/prices?code=${r.code}`} className="bds-card" style={{ display: 'block', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 18 }}>
+                <Link prefetch={false} key={r.code} href={`/prices?code=${r.code}`} className="bds-card" style={{ display: 'block', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 18 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', background: 'var(--navy)', borderRadius: 5, padding: '1px 7px' }}>{i + 1}</span>
@@ -90,7 +90,7 @@ export default async function HomePage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 16 }}>
             {featuredListings.map((t) => (
-              <Link key={t.id} href={`/listings/tx/${t.id}`} className="bds-card" style={{ display: 'block', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 18 }}>
+              <Link prefetch={false} key={t.id} href={`/listings/tx/${t.id}`} className="bds-card" style={{ display: 'block', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, padding: 18 }}>
                 <div style={{ fontSize: 12, color: '#8499B3', fontWeight: 600, marginBottom: 4 }}>{featuredSgg?.name}{t.dong ? ` · ${t.dong}` : ''}</div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--navy)', marginBottom: 8, minHeight: 22 }}>{t.apt_name ?? '—'}</div>
                 <div style={{ fontSize: 19, fontWeight: 800, color: 'var(--navy)', marginBottom: 6 }}>{formatPriceManwon(t.deal_amount)}</div>

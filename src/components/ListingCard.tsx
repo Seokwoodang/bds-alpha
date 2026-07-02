@@ -10,6 +10,7 @@ export function ListingCard({ listing, isSaved, returnTo }: { listing: Listing; 
   return (
     <article style={{ position: 'relative' }}>
       <Link
+        prefetch={false}
         href={`/listings/${listing.id}`}
         className="bds-card"
         style={{ display: 'flex', flexDirection: 'column', background: '#fff', border: '1px solid var(--line)', borderRadius: 16, overflow: 'hidden', width: '100%' }}

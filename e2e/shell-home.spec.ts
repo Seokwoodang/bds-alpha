@@ -52,6 +52,21 @@ test.describe('공통 셸 / 홈', () => {
     await expect(firstRec).toContainText('서울');
   });
 
+  test('MAP3 · 지도 오버레이 중복 선택 — 규제지역·유망 빗금 동시 표시', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('img', { name: '전국 시군구 시세 지도' })).toBeVisible();
+    // 규제지역 토글 → 빨간 빗금 4개(강남·서초·송파·용산)
+    await page.getByRole('button', { name: /규제지역/ }).click();
+    await expect(page.locator('path[data-overlay="reg"]')).toHaveCount(4);
+    // 유망 토글 추가(중복 선택) → 규제 빗금 유지 + 유망 빗금 표시
+    await page.getByRole('button', { name: /유망 70점\+/ }).click();
+    await expect(page.locator('path[data-overlay="reg"]')).toHaveCount(4);
+    await expect(page.locator('path[data-overlay="prom"]').first()).toBeVisible();
+    // 범례 동시 표기
+    await expect(page.getByText(/빨간 빗금 = 규제지역/)).toBeVisible();
+    await expect(page.getByText(/주황 빗금 = 유망/)).toBeVisible();
+  });
+
   test('T87 · 홈 지역 검색 자동완성 → 선택 시 /prices?code=', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('지역 검색').fill('해운대');

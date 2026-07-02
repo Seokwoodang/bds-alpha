@@ -62,6 +62,9 @@ export function HomeDashboard() {
 
   const affordSet = useMemo(() => active ? new Set(affordAll.map((x) => x.r.code)) : null, [affordAll, active]);
 
+  // 유망 지역(스코어 70+ · 표본 충분) — 지도 오버레이용
+  const promising = useMemo(() => new Set(rows.filter((r) => r.score >= 70 && !r.lowSample).map((r) => r.code)), [rows]);
+
   // 추천: 시/도 필터 → 스코어 내림차순(저표본 뒤로) TOP 3 — 예산이 커질수록 더 좋은 지역이 올라옴
   const recs = useMemo(() => affordAll
     .filter((x) => sido === '전국' || x.r.sido === sido)
@@ -71,7 +74,7 @@ export function HomeDashboard() {
   return (
     <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'stretch' }}>
       <div style={{ flex: '1 1 560px', minWidth: 300, background: '#fff', border: '1px solid var(--line)', borderRadius: 18, padding: 20 }}>
-        <KoreaChoropleth externalData={mapData} highlight={affordSet} sidoFilter={sido === '전국' ? null : sido} />
+        <KoreaChoropleth externalData={mapData} highlight={affordSet} promising={promising} sidoFilter={sido === '전국' ? null : sido} />
       </div>
 
       <div style={{ flex: '1 1 300px', minWidth: 280, display: 'flex', flexDirection: 'column', gap: 14 }}>
