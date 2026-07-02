@@ -6,6 +6,7 @@ import { getProperties } from '@/lib/queries/propertiesRead';
 import { formatPriceManwon } from '@/lib/property';
 import { CODE_TO_SIGUNGU } from '@/lib/regions-kr';
 import { TaxEstimate } from '@/components/TaxEstimate';
+import { SellTaxSim } from '@/components/SellTaxSim';
 import { HeartTxButton } from '@/components/HeartTxButton';
 import { RegistryLink } from '@/components/RegistryLink';
 import { MapLink } from '@/components/MapLink';
@@ -62,6 +63,7 @@ export default async function TxDetailPage({ params }: { params: Promise<{ id: s
             ))}
           </div>
           <TaxEstimate priceEok={priceManwon / 10000} area={area} region={tx.region} ownedDefault={properties.length} />
+          <SellTaxSim buyEok={priceManwon / 10000} />
         </div>
 
         <div style={{ flex: '1 1 320px', minWidth: 280 }}>

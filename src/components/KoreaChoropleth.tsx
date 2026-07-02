@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { CODE_TO_SIGUNGU } from '@/lib/regions-kr';
 
 interface Geo { W: number; H: number; regions: Record<string, { n: string; s: string; d: string }> }
-interface Datum { sale: number; ratio: number | null }
+export interface MapDatum { sale: number; jeonse: number | null; ratio: number | null }
 type Metric = 'ratio' | 'sale';
 
 // 색상 스케일(낮음→높음). ratio: 갭투자 유리(높을수록 진한 초록). sale: 비쌀수록 진한 남색.
@@ -22,24 +23,30 @@ function colorFor(metric: Metric, v: number | null): string {
   return ramp[i];
 }
 
-export function KoreaChoropleth() {
+export function KoreaChoropleth({ externalData, highlight, sidoFilter }: {
+  externalData?: Record<string, MapDatum>;   // 부모가 데이터 주입 시 자체 로드 생략
+  highlight?: Set<string> | null;            // 예산 진입 가능 지역(굵은 테두리, 나머지 흐림)
+  sidoFilter?: string | null;                // 시/도 필터(그 외 흐림)
+} = {}) {
   const router = useRouter();
   const [geo, setGeo] = useState<Geo | null>(null);
-  const [data, setData] = useState<Record<string, Datum>>({});
+  const [own, setOwn] = useState<Record<string, MapDatum>>({});
   const [metric, setMetric] = useState<Metric>('ratio');
   const [hover, setHover] = useState<{ code: string; x: number; y: number } | null>(null);
+  const data = externalData ?? own;
 
   useEffect(() => {
     fetch('/korea-geo.json').then((r) => r.json()).then(setGeo).catch(() => {});
+    if (externalData) return; // 부모 주입 시 자체 로드 생략
     const supabase = createClient();
     supabase.rpc('region_gap_all').then(({ data: rows }) => {
-      const m: Record<string, Datum> = {};
-      ((rows as { lawd_cd: string; sale_eok: number; jeonse_ratio: number | null }[]) ?? []).forEach((d) => {
-        m[d.lawd_cd] = { sale: Number(d.sale_eok), ratio: d.jeonse_ratio != null ? Number(d.jeonse_ratio) : null };
+      const m: Record<string, MapDatum> = {};
+      ((rows as { lawd_cd: string; sale_eok: number; jeonse_eok: number | null; jeonse_ratio: number | null }[]) ?? []).forEach((d) => {
+        m[d.lawd_cd] = { sale: Number(d.sale_eok), jeonse: d.jeonse_eok != null ? Number(d.jeonse_eok) : null, ratio: d.jeonse_ratio != null ? Number(d.jeonse_ratio) : null };
       });
-      setData(m);
+      setOwn(m);
     });
-  }, []);
+  }, [externalData]);
 
   const coloredCount = useMemo(() => Object.keys(data).length, [data]);
   const hoveredInfo = hover && geo ? geo.regions[hover.code] : null;
@@ -64,8 +71,12 @@ export function KoreaChoropleth() {
           {Object.entries(geo.regions).map(([code, r]) => {
             const d = data[code];
             const v = d ? (metric === 'ratio' ? d.ratio : d.sale) : null;
+            const outSido = !!sidoFilter && CODE_TO_SIGUNGU[code]?.sido !== sidoFilter;
+            const hi = highlight?.has(code) ?? false;
+            const dimmed = outSido || (!!highlight && highlight.size > 0 && !hi && d != null);
             return (
-              <path key={code} d={r.d} fill={colorFor(metric, v)} stroke="#fff" strokeWidth={0.5}
+              <path key={code} d={r.d} fill={colorFor(metric, v)} fillOpacity={dimmed ? 0.18 : 1}
+                stroke={hi ? '#0C2340' : '#fff'} strokeWidth={hi ? 1.6 : 0.5}
                 style={{ cursor: 'pointer', outline: 'none' }}
                 onMouseEnter={(e) => setHover({ code, x: e.clientX, y: e.clientY })}
                 onMouseMove={(e) => setHover({ code, x: e.clientX, y: e.clientY })}
@@ -94,6 +105,9 @@ export function KoreaChoropleth() {
         <span style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600 }}>{metric === 'ratio' ? '높음(갭 작음·유리)' : '높음'}</span>
         <span style={{ width: 26, height: 12, background: '#EEF2F7', borderRadius: 2, marginLeft: 10, border: '1px solid var(--line)' }} />
         <span style={{ fontSize: 12, color: 'var(--muted-2)' }}>미수집</span>
+        {highlight && highlight.size > 0 && (
+          <span style={{ fontSize: 12, color: 'var(--navy)', fontWeight: 700, marginLeft: 10 }}>■ 굵은 테두리 = 내 예산 진입 가능 {highlight.size}곳</span>
+        )}
       </div>
     </div>
   );

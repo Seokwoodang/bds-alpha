@@ -28,15 +28,28 @@ test.describe('공통 셸 / 홈', () => {
     await expect(page.getByRole('img', { name: '전국 시군구 시세 지도' })).toBeVisible();
   });
 
-  test('HW1 · 홈 투자 위젯 — 자본 입력 → 즉시 지역 추천 + 스코어 랭킹 근거', async ({ page }) => {
+  test('HW1 · 홈 투자 위젯 — 예산에 따라 결과 변화 + 시도 필터 + 지도 하이라이트', async ({ page }) => {
     await page.goto('/');
     // 스코어 랭킹: 등급 배지 + 근거(전세가율/거래량) 노출
     await expect(page.getByText(/유망|보통|주의/).first()).toBeVisible();
     await expect(page.getByText(/전세가율 \d/).first()).toBeVisible();
-    // 미니 위젯: 입력 즉시 추천
+    // 작은 예산 → 진입 가능 수 기록
+    await page.getByLabel('홈 보유 자본').fill('1');
+    await expect(page.getByText(/진입 가능 \d+곳 중/)).toBeVisible();
+    const small = await page.getByText(/진입 가능 \d+곳 중/).textContent();
+    // 큰 예산 → 진입 가능 수가 늘어나야 함(입력이 결과에 반영)
     await page.getByLabel('홈 보유 자본').fill('20');
     await page.getByLabel('홈 대출 가능액').fill('10');
     await expect(page.getByText(/필요자본 .*억/).first()).toBeVisible();
+    const big = await page.getByText(/진입 가능 \d+곳 중/).textContent();
+    expect(Number(big!.match(/\d+/)![0])).toBeGreaterThan(Number(small!.match(/\d+/)![0]));
+    // 지도 하이라이트 범례
+    await expect(page.getByText(/굵은 테두리 = 내 예산 진입 가능/)).toBeVisible();
+    // 시도 필터 → 추천이 해당 시도만
+    await page.getByLabel('홈 시도 필터').selectOption('서울특별시');
+    await expect(page.getByText(/진입 가능 \d+곳 중/)).toBeVisible();
+    const firstRec = page.locator('a[href^="/prices?code="]').filter({ hasText: '필요자본' }).first();
+    await expect(firstRec).toContainText('서울');
   });
 
   test('T87 · 홈 지역 검색 자동완성 → 선택 시 /prices?code=', async ({ page }) => {

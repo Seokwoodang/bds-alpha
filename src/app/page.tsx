@@ -4,8 +4,7 @@ import { getRegionScoreAll, getRegionListings, getDataMeta } from '@/lib/queries
 import { rankRegions, scoreBadge } from '@/lib/score';
 import { formatPriceManwon } from '@/lib/property';
 import { CODE_TO_SIGUNGU } from '@/lib/regions-kr';
-import { KoreaChoropleth } from '@/components/KoreaChoropleth';
-import { HomeInvestWidget } from '@/components/HomeInvestWidget';
+import { HomeDashboard } from '@/components/HomeDashboard';
 import { RegionSearch } from '@/components/RegionSearch';
 import { HomeGuides } from '@/components/HomeGuides';
 
@@ -40,20 +39,7 @@ export default async function HomePage() {
           </div>
           <div style={{ flex: '0 1 380px', minWidth: 260 }}><RegionSearch /></div>
         </div>
-        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'stretch' }}>
-          <div style={{ flex: '1 1 560px', minWidth: 300, background: '#fff', border: '1px solid var(--line)', borderRadius: 18, padding: 20 }}>
-            <KoreaChoropleth />
-          </div>
-          <div style={{ flex: '1 1 300px', minWidth: 280, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <HomeInvestWidget />
-            <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 18, padding: 18, flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--navy)', marginBottom: 10 }}>투자 스코어란?</div>
-              <div style={{ fontSize: 13, color: '#7286A0', lineHeight: 1.7 }}>
-                <strong style={{ color: 'var(--navy)' }}>모멘텀 40</strong>(3개월 가격 추세) + <strong style={{ color: 'var(--navy)' }}>거래량 30</strong>(수요 유입) + <strong style={{ color: 'var(--navy)' }}>진입성 30</strong>(전세가율·갭)으로 계산한 종합 점수입니다. 전세가율만 높은 지역이 아니라, <strong style={{ color: 'var(--navy)' }}>오르면서 거래가 붙는 지역</strong>을 찾습니다.
-              </div>
-            </div>
-          </div>
-        </div>
+        <HomeDashboard />
       </section>
 
       {/* 투자 스코어 랭킹 */}

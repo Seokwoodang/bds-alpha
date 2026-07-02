@@ -26,6 +26,9 @@ test.describe('전국 실거래 매물', () => {
     const rv = page.getByRole('link', { name: /네이버 지도·로드뷰/ });
     await expect(rv).toHaveAttribute('href', /map\.naver\.com/);
     await expect(rv).toHaveAttribute('target', '_blank');
+    // 매도 시 양도세 간이 시뮬(취득가=실거래가)
+    await expect(page.getByRole('heading', { name: /매도 시 양도세/ })).toBeVisible();
+    await expect(page.getByText(/세후 차익|비과세/).first()).toBeVisible();
   });
 
   test('NL3 · 로그인 후 상세에서 관심 저장 → 마이페이지 노출', async ({ page }) => {
