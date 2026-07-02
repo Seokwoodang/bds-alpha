@@ -21,11 +21,11 @@ test.describe('공통 셸 / 홈', () => {
     await expect(page.getByRole('link', { name: '매물', exact: true })).not.toHaveAttribute('aria-current', 'page');
   });
 
-  test('T86 · 홈은 시안 A만 렌더, A/B/C 토글 없음', async ({ page }) => {
+  test('T86 · 홈은 기능형(전국 지도) — 마케팅 히어로 없음', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: /감이 아니라/ })).toBeVisible();
-    await expect(page.getByText('홈 시안 비교')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: /시안 [ABC]/ })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: '전국 부동산 투자 지도' })).toBeVisible();
+    await expect(page.getByText(/감이 아니라|데이터로 검증하는/)).toHaveCount(0);
+    await expect(page.getByRole('img', { name: '전국 시군구 시세 지도' })).toBeVisible();
   });
 
   test('T87 · 홈 검색 제출 → /listings?q=', async ({ page }) => {

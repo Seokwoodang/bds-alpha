@@ -32,3 +32,23 @@ export async function getSeriesCode(code: string): Promise<SeriesPoint[]> {
   const { data } = await supabase.rpc('region_series_code', { p_lawd: code });
   return ((data as { label: string; price_eok: number }[]) ?? []).map((d) => ({ label: d.label, value: Number(d.price_eok) }));
 }
+
+export interface GapAllRow { lawd_cd: string; sale_eok: number; jeonse_eok: number; gap_eok: number; jeonse_ratio: number }
+/** 캐시된 전 시군구 갭/전세가율. 홈 "투자 유리 지역" 랭킹용. */
+export async function getRegionGapAll(): Promise<GapAllRow[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc('region_gap_all');
+  return ((data as GapAllRow[]) ?? []).map((d) => ({
+    lawd_cd: d.lawd_cd, sale_eok: Number(d.sale_eok), jeonse_eok: Number(d.jeonse_eok), gap_eok: Number(d.gap_eok), jeonse_ratio: Number(d.jeonse_ratio),
+  }));
+}
+
+export interface TxRow { id: number; apt_name: string | null; dong: string | null; area: number; floor: number | null; deal_amount: number; deal_date: string }
+/** 지역 최근 개별 실거래(홈 대표 매물용, 상세 링크 위해 id 포함). */
+export async function getRegionListings(code: string, limit = 6): Promise<TxRow[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from('transactions')
+    .select('id,apt_name,dong,area,floor,deal_amount,deal_date')
+    .eq('lawd_cd', code).order('deal_date', { ascending: false }).limit(limit);
+  return ((data as TxRow[]) ?? []).map((t) => ({ ...t, area: Number(t.area), deal_amount: Number(t.deal_amount) }));
+}
