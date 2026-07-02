@@ -67,6 +67,37 @@ test.describe('공통 셸 / 홈', () => {
     await expect(page.getByText(/주황 빗금 = 유망/)).toBeVisible();
   });
 
+  test('MAP4 · 지도 확대/축소/초기화 + 시도 필터 자동 줌', async ({ page }) => {
+    await page.goto('/');
+    const svg = page.getByRole('img', { name: '전국 시군구 시세 지도' });
+    await expect(svg).toBeVisible();
+    const before = await svg.getAttribute('viewBox');
+    // 확대 버튼 → viewBox 변경
+    await page.getByRole('button', { name: '지도 확대' }).click();
+    await expect.poll(() => svg.getAttribute('viewBox')).not.toBe(before);
+    // 시/도 필터 → 해당 지역으로 자동 줌
+    await page.getByLabel('홈 시도 필터').selectOption('서울특별시');
+    const seoulView = await svg.getAttribute('viewBox');
+    expect(seoulView).not.toBe(before);
+    // 초기화 → 전체 보기 복귀
+    await page.getByRole('button', { name: '지도 초기화' }).click();
+    await expect.poll(() => svg.getAttribute('viewBox')).toBe(before);
+  });
+
+  test('MAP5 · 색칠 기준 5종 전환 + 범례 반영', async ({ page }) => {
+    await page.goto('/');
+    const sel = page.getByLabel('지도 색칠 기준');
+    await expect(sel).toBeVisible();
+    // 5개 레이어 존재
+    for (const label of ['전세가율', '매매 중위가', '3개월 변동', '거래량(3개월)', '투자 스코어']) {
+      await expect(sel.locator('option', { hasText: label })).toHaveCount(1);
+    }
+    // 거래량으로 전환 → 범례 라벨 반영
+    await sel.selectOption({ label: '거래량(3개월)' });
+    await expect(page.getByText(/거래량\(3개월\):/)).toBeVisible();
+    await expect(page.getByText('많음', { exact: true })).toBeVisible();
+  });
+
   test('T87 · 홈 지역 검색 자동완성 → 선택 시 /prices?code=', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('지역 검색').fill('해운대');

@@ -26,10 +26,10 @@ export function HomeDashboard() {
   useEffect(() => {
     const supabase = createClient();
     Promise.all([supabase.rpc('region_gap_all'), supabase.rpc('region_score_all')]).then(([g, s]) => {
-      const scoreByCode = new Map<string, { score: number; lowSample: boolean }>();
+      const scoreByCode = new Map<string, { score: number; lowSample: boolean; chg: number | null; vol: number }>();
       ((s.data as { lawd_cd: string; sale_eok: number; jeonse_ratio: number | null; chg3: number | null; vol_recent: number; vol_prev: number; tx_count: number }[]) ?? []).forEach((d) => {
         const r = investScore({ code: d.lawd_cd, sale: Number(d.sale_eok), ratio: d.jeonse_ratio != null ? Number(d.jeonse_ratio) : null, chg3: d.chg3 != null ? Number(d.chg3) : null, volRecent: Number(d.vol_recent), volPrev: Number(d.vol_prev), txCount: Number(d.tx_count) });
-        scoreByCode.set(d.lawd_cd, { score: r.score, lowSample: r.lowSample });
+        scoreByCode.set(d.lawd_cd, { score: r.score, lowSample: r.lowSample, chg: d.chg3 != null ? Number(d.chg3) : null, vol: Number(d.vol_recent) });
       });
       const md: Record<string, MapDatum> = {};
       const list: Row[] = [];
@@ -38,8 +38,8 @@ export function HomeDashboard() {
         if (!sgg) return;
         const sale = Number(d.sale_eok), jeonse = Number(d.jeonse_eok);
         const ratio = d.jeonse_ratio != null ? Number(d.jeonse_ratio) : null;
-        md[d.lawd_cd] = { sale, jeonse, ratio };
         const sc = scoreByCode.get(d.lawd_cd);
+        md[d.lawd_cd] = { sale, jeonse, ratio, chg: sc?.chg ?? null, vol: sc?.vol ?? null, score: sc?.score ?? null };
         list.push({ code: d.lawd_cd, name: sgg.name, sido: sgg.sido, sale, jeonse, ratio, score: sc?.score ?? 0, lowSample: sc?.lowSample ?? true });
       });
       setMapData(md);
